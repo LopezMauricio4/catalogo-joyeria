@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu as MenuIcon, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import HeaderSearch from './HeaderSearch';
+import ShopNavLink from './ShopNavLink';
 
 const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,7 +31,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
 
   const isLoggedIn = user && user.role !== "guest";
   const searchButton = <button type="button" className="shop-icon-button text-ink-soft" aria-label="Buscar joyas" aria-expanded={isSearchOpen} aria-controls="header-search" onClick={toggleSearch}><Search size={20} strokeWidth={1.8} /></button>;
-  const cartButton = <Link to="/carrito" className="shop-icon-button cart-nav-link text-ink-soft" aria-label={`Carrito, ${cartCount} piezas`} onClick={() => { setIsOpen(false); setIsAccountOpen(false); }}><ShoppingBag size={21} strokeWidth={1.7} />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
+  const cartButton = <Link to="/carrito" className="shop-icon-button cart-nav-link text-ink-soft" aria-current={location.pathname === '/carrito' ? 'page' : undefined} aria-label={`Carrito, ${cartCount} ${cartCount === 1 ? 'pieza' : 'piezas'}`} onClick={() => { setIsOpen(false); setIsAccountOpen(false); }}><ShoppingBag size={21} strokeWidth={1.7} />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
 
   const toggleMobileMenu = () => {
     setIsOpen((open) => !open);
@@ -156,21 +157,21 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
             <span className="font-display text-4xl font-semibold tracking-[0.16em] text-ink-soft uppercase">ALPEZ</span>
           </Link>
 
-          <nav className="hidden items-center gap-7 text-[10px] tracking-[0.2em] uppercase text-ink-muted lg:flex">
+          <nav className="desktop-shop-nav hidden items-center gap-5 text-[11px] tracking-[0.1em] uppercase text-ink-muted lg:flex">
             {searchButton}
-            <Link to="/" className="transition hover:text-ink-soft">
+            <ShopNavLink to="/">
               Inicio
-            </Link>
-            <Link to="/catalogo" className="transition hover:text-ink-soft">
+            </ShopNavLink>
+            <ShopNavLink to="/catalogo">
               Catálogo
-            </Link>
+            </ShopNavLink>
 
-            <Link to="/catalogo?material=oro-18k" className="transition hover:text-ink-soft">
+            <ShopNavLink to="/catalogo?material=oro-18k">
               Oro 18k
-            </Link>
-            <Link to="/catalogo?material=laminado" className="transition hover:text-ink-soft">
+            </ShopNavLink>
+            <ShopNavLink to="/catalogo?material=laminado">
               Oro laminado 18k
-            </Link>
+            </ShopNavLink>
 
           </nav>
 

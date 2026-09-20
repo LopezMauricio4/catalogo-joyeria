@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { buildWhatsAppLink } from "../utils/whatsappGenerator";
+import ShopNavLink from './ShopNavLink';
 
 const navLinks = [
   { to: "/", label: "Inicio" },
@@ -89,9 +90,9 @@ const Footer = () => {
           <ul className="mt-5 space-y-3">
             {navLinks.map((link) => (
               <li key={link.label}>
-                <Link to={link.to} className="text-sm text-ivory-soft/75 transition hover:text-white">
+                <ShopNavLink to={link.to} className="footer-nav-link">
                   {link.label}
-                </Link>
+                </ShopNavLink>
               </li>
             ))}
           </ul>

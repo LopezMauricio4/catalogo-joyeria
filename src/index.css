@@ -436,6 +436,15 @@ p {
 .product-zoom-dialog { width: min(880px, calc(100% - 24px)); }.product-zoom-dialog .shop-dialog-header h2 { font-size: 26px; }.product-zoom-dialog img, .product-zoom-dialog .product-image-placeholder { width: 100%; height: min(65dvh, 680px); object-fit: contain; margin-top: 16px; }.product-zoom-navigation { display: flex; justify-content: center; align-items: center; gap: 25px; padding-top: 12px; font-size: 13px; }
 .product-mobile-purchase { display: none; }
 .cart-nav-link { position: relative; }
+.cart-nav-link[aria-current="page"] { background: #f4ead1; color: #80601d; border-radius: 50%; }
+.desktop-shop-nav .shop-nav-link { position: relative; display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; color: var(--color-forest-800); white-space: nowrap; transition: color .2s; }
+.desktop-shop-nav .shop-nav-link::after { content: ''; position: absolute; inset-inline: 0; bottom: 3px; height: 2px; background: #a28130; transform: scaleX(0); transform-origin: left; transition: transform .2s; }
+.desktop-shop-nav .shop-nav-link:hover::after, .desktop-shop-nav .shop-nav-link.is-active::after, .desktop-shop-nav .shop-nav-link:focus-visible::after { transform: scaleX(1); }
+.desktop-shop-nav .shop-nav-link.is-active { color: #80601d; }
+@media (min-width: 1024px) and (max-width: 1199px) { .desktop-shop-nav { gap: 14px; font-size: 10px; letter-spacing: .06em; } }
+@media (min-width: 1200px) { .desktop-shop-nav { font-size: 12px; } }
+.footer-nav-link { display: inline-flex; align-items: center; min-height: 36px; color: #f8f4e9; font-size: 15px; font-weight: 500; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; }
+.footer-nav-link:hover, .footer-nav-link.is-active, .footer-nav-link:focus-visible { color: #e8c875; border-bottom-color: #e8c875; }
 .cart-count { position: absolute; right: -3px; top: -2px; min-width: 18px; height: 18px; padding-inline: 3px; display: grid; place-items: center; border-radius: 20px; background: var(--color-forest-800); color: white; font-size: 10px; line-height: 1; }
 .product-purchase-actions { display: flex; gap: 10px; margin-top: 14px; }
 .product-purchase-actions .shop-button { flex: 1; min-width: 0; padding-inline: 12px; gap: 7px; font-size: 12px; }
