@@ -5,6 +5,11 @@ define el frontend Vite en `.` y la API Express en `backend`.
 Las peticiones `/api` y `/api/*` llegan al backend conservando el prefijo;
 las demás llegan al frontend, que tiene el fallback a `index.html` para React Router.
 
+El backend usa `type: commonjs` con TypeScript NodeNext para que la salida
+JavaScript use el mismo formato que el cargador de la función Express. Los
+scripts administrativos usan `.mts` para conservar su ejecución ESM. El
+frontend mantiene su configuración ESM independiente.
+
 ## Pasos
 
 1. Haz commit y push de `vercel.json` y de los cambios de la tienda a GitHub.
