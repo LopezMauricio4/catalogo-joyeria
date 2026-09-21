@@ -1,6 +1,3 @@
-import { Link } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
-import { buildWhatsAppLink } from "../utils/whatsappGenerator";
 import ShopNavLink from './ShopNavLink';
 
 const navLinks = [
@@ -9,12 +6,6 @@ const navLinks = [
   { to: "/carrito", label: "Mi carrito" },
   { to: "/catalogo?material=oro-18k", label: "Oro 18k" },
   { to: "/catalogo?material=laminado", label: "Oro laminado 18k" },
-];
-
-const helpLinks = [
-  { to: "/catalogo", label: "Preguntas frecuentes" },
-  { to: "/catalogo", label: "Envíos y cambios" },
-  { to: "/catalogo", label: "Garantía" },
 ];
 
 const SocialIcon = ({ type }) => {
@@ -28,7 +19,6 @@ const SocialIcon = ({ type }) => {
 };
 
 const Footer = () => {
-  const whatsappLink = buildWhatsAppLink("Hola, quiero más información sobre sus piezas.");
   const year = new Date().getFullYear();
 
   return (
@@ -72,15 +62,6 @@ const Footer = () => {
             >
               <SocialIcon type="tiktok" />
             </a>
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Escríbenos por WhatsApp"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-ivory-soft/80 transition hover:border-gold-400 hover:text-gold-400"
-            >
-              <MessageCircle className="h-4 w-4" />
-            </a>
           </div>
         </div>
 
@@ -98,29 +79,6 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Atención al cliente */}
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-400">Atención al cliente</p>
-          <ul className="mt-5 space-y-3">
-            {helpLinks.map((link) => (
-              <li key={link.label}>
-                <Link to={link.to} className="text-sm text-ivory-soft/75 transition hover:text-white">
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm text-ivory-soft/75 transition hover:text-white"
-              >
-                Escríbenos por WhatsApp
-              </a>
-            </li>
-          </ul>
-        </div>
 
       </div>
 

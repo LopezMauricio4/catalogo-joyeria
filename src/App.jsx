@@ -16,6 +16,11 @@ import useCart from './hooks/useCart';
 import Cart from './pages/Cart';
 import GuaranteesPage from "./pages/GuaranteesPage";
 
+function StoreFooter() {
+  const { pathname } = useLocation();
+  return pathname.startsWith('/producto/') ? null : <Footer />;
+}
+
 function RouteScroll() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
@@ -97,7 +102,7 @@ function App() {
             ) : <Navigate to="/auth" replace />} />
           </Routes>
         </main>
-        <Footer />
+        <StoreFooter />
         <FloatingWhatsApp />
       </div>
     </Router>

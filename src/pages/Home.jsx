@@ -1,4 +1,4 @@
-import { ArrowRight, Diamond, Eye, MessageCircle } from "lucide-react";
+import { ArrowRight, Eye, MessageCircle, Quote } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import JewelryCard from "../components/JewelryCard";
@@ -12,30 +12,16 @@ const materials = [
   {
     key: "oro-18k",
     title: "Oro 18k",
+    image: "/images/material-oro-18k.webp",
     description:
-      "Piezas sólidas con brillo premium, durabilidad y valor atemporal para quienes buscan lujo inigualable.",
+      "Descubre nuestras joyas en oro 18k y encuentra una pieza especial para ti.",
   },
   {
     key: "laminado",
     title: "Oro laminado 18k",
+    image: "/images/material-laminado-v2.webp",
     description:
-      "Apariencia dorada elegante y accesible, ideal para combinar con un estilo diario sofisticado.",
-  },
-];
-
-// Copy de ejemplo — reemplaza por testimonios reales de tus clientas cuando los tengas.
-const testimonials = [
-  {
-    name: "Camila R.",
-    quote: "La atención por WhatsApp fue clara desde el primer mensaje y la pieza superó lo que esperaba.",
-  },
-  {
-    name: "Daniela M.",
-    quote: "Se nota la diferencia en el acabado. Es mi segunda compra y no ha sido la última.",
-  },
-  {
-    name: "Valentina S.",
-    quote: "Pedí asesoría para un regalo y me guiaron hasta encontrar la pieza correcta.",
+      "Diseños con acabado en oro laminado 18k para combinar con tu estilo.",
   },
 ];
 
@@ -101,12 +87,12 @@ const Home = ({ products, isLoading = false }) => {
   const showcaseProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
 
   return (
-    <div className="bg-ivory text-ink-soft">
+    <div className="home-storefront bg-ivory text-ink-soft">
       {/* Hero */}
-      <section className="relative isolate min-h-152 overflow-hidden border-b border-line bg-ivory">
+      <section className="home-hero-screen relative isolate overflow-hidden border-b border-line bg-ivory">
         <div className="absolute inset-0 -z-10">
           <img
-            src={heroImage}
+            src="/images/inicio-alpez.webp"
             alt=""
             aria-hidden="true"
             className="h-full w-full scale-110 object-cover object-[68%_center] blur-[1px] md:object-[72%_center]"
@@ -115,7 +101,7 @@ const Home = ({ products, isLoading = false }) => {
           <div className="absolute inset-y-0 left-0 w-full bg-linear-to-r from-ivory via-ivory/90 to-ivory/15 backdrop-blur-[2px] md:w-[68%] md:from-ivory md:via-ivory/90 md:to-transparent" />
         </div>
 
-        <div className="mx-auto flex min-h-152 max-w-7xl items-center px-6 py-16 md:px-8 md:py-24">
+        <div className="home-hero-content mx-auto flex w-full max-w-7xl items-center px-6 md:px-8">
           <div className="max-w-2xl space-y-8 text-center md:text-left">
             <p className="luxury-eyebrow">Joyería fina</p>
             <h1 className="text-4xl font-light leading-[1.05] tracking-[-0.04em] text-ink md:text-6xl">
@@ -142,47 +128,23 @@ const Home = ({ products, isLoading = false }) => {
       </section>
 
       {/* Materiales */}
-      <Reveal as="section" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-8 md:grid-cols-2">
+      <Reveal as="section" className="home-material-section mx-auto max-w-7xl px-6 py-20">
+        <div className="home-material-heading">
+          <p className="luxury-eyebrow">Nuestras colecciones</p>
+          <h2>Elige el material de tu próxima joya</h2>
+          <p>Explora nuestras dos colecciones: oro 18k y oro laminado 18k. Selecciona una para descubrir sus piezas.</p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
           {materials.map((material) => (
-            <Link key={material.key} to={`/catalogo?material=${material.key}`} className={`luxury-card material-card material-card-${material.key} p-8`}>
-              <Diamond className="mb-6 h-10 w-10 text-forest-600" />
-              <h2 className="text-3xl font-light uppercase tracking-[0.18em] text-ink">{material.title}</h2>
-              <p className="mt-4 text-base leading-7 text-ink-muted">{material.description}</p>
-              <span className="luxury-btn-ghost mt-6">
-                Ver {material.title}
-                <ArrowRight className="h-4 w-4" />
-              </span>
+            <Link key={material.key} to={`/catalogo?material=${material.key}`} className={`luxury-card material-card material-card-${material.key} home-material-photo-card`}>
+              <div className="home-material-card-copy">
+                <h3>{material.title}</h3>
+                <p>{material.description}</p>
+                <span className="home-material-card-action">Ver colección <ArrowRight size={16} aria-hidden="true" /></span>
+              </div>
+              <img src={material.image} alt={`Joyas de la colección ${material.title}`} loading="lazy" decoding="async" width={material.key === 'oro-18k' ? 562 : 859} height="1000" />
             </Link>
           ))}
-        </div>
-      </Reveal>
-
-      {/* Historia de marca */}
-      <Reveal as="section" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-10 rounded-card-lg border border-line bg-ivory-soft/90 p-8 shadow-[0_20px_45px_rgba(11,37,27,0.03)] md:grid-cols-2 md:items-center md:p-14">
-          <div>
-            <p className="luxury-eyebrow">Nuestra historia</p>
-            <h2 className="mt-3 text-4xl font-light tracking-[-0.03em] text-ink">Hecho para durar</h2>
-            {/* Copy de ejemplo — reemplaza con la historia real de Alpez */}
-            <p className="mt-5 text-base leading-7 text-ink-muted">
-              Alpez nace de la idea de que una joya debe acompañar, no solo decorar. Seleccionamos cada pieza
-              pensando en el brillo que se mantiene con el tiempo y en un servicio cercano, directo y honesto
-              desde la primera consulta.
-            </p>
-            <Link to="/catalogo" className="luxury-btn-ghost mt-6">
-              Conocer el catálogo
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="relative">
-            <div className="absolute -inset-3 -z-10 rounded-card-lg border border-gold-200" />
-            <img
-              src={heroImage}
-              alt="Detalle de joyería Alpez"
-              className="w-full rounded-card-lg border border-line object-cover shadow-[0_24px_50px_rgba(11,37,27,0.08)]"
-            />
-          </div>
         </div>
       </Reveal>
 
@@ -233,23 +195,19 @@ const Home = ({ products, isLoading = false }) => {
         )}
       </Reveal>
 
-      {/* Testimonios */}
-      <Reveal as="section" className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-12 text-center">
-          <p className="luxury-eyebrow">Lo que dicen</p>
-          <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Clientas que confiaron en Alpez</h2>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <div key={testimonial.name} className="luxury-card p-6">
-              <div className="luxury-divider mb-4 justify-start">
-                <span className="luxury-divider-mark" />
-              </div>
-              <p className="text-sm leading-7 text-ink-muted">&ldquo;{testimonial.quote}&rdquo;</p>
-              <p className="mt-5 text-[11px] uppercase tracking-[0.18em] text-ink-faint">{testimonial.name}</p>
-            </div>
-          ))}
+      {/* Publicar aquí únicamente testimonios reales con autorización del cliente. */}
+      <Reveal as="section" className="customer-reviews mx-auto max-w-7xl px-6 py-20">
+        <div className="customer-reviews-panel">
+          <div className="customer-reviews-symbol" aria-hidden="true"><Quote size={32} strokeWidth={1.2} /></div>
+          <div className="customer-reviews-copy">
+            <p className="luxury-eyebrow">Experiencias Alpez</p>
+            <h2>Tu experiencia cuenta</h2>
+            <p>¿Ya tienes una joya de Alpez? Nos encantará saber cómo fue tu experiencia y qué hace especial tu pieza.</p>
+          </div>
+          <div className="customer-reviews-action">
+            <a href={buildWhatsAppLink('Hola, Alpez. Ya compré una joya y me gustaría compartir mi experiencia: ')} target="_blank" rel="noopener noreferrer" className="shop-button"><MessageCircle size={18} />Compartir mi experiencia</a>
+            <p>Conversemos por WhatsApp.<br />Tu opinión nos ayuda a mejorar.</p>
+          </div>
         </div>
       </Reveal>
 

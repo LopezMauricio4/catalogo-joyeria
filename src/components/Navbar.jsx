@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu as MenuIcon, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
+import { buildWhatsAppLink } from '../utils/whatsappGenerator';
 
 const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
