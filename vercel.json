@@ -14,7 +14,7 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "entrypoint": "src/app.ts",
+      "entrypoint": "app.cjs",
       "installCommand": "npm ci",
       "buildCommand": "npm run build"
     }

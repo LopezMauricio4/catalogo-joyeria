@@ -10,6 +10,11 @@ JavaScript use el mismo formato que el cargador de la función Express. Los
 scripts administrativos usan `.mts` para conservar su ejecución ESM. El
 frontend mantiene su configuración ESM independiente.
 
+Vercel entra por `backend/app.cjs`, junto al `package.json` del servicio.
+Esta entrada carga `dist/app.js` después de `npm run build`, de forma que el
+empaquetador recorre los `require` de JavaScript ya compilado y resuelve las
+dependencias desde el backend, en vez de transformar directamente `src/app.ts`.
+
 ## Pasos
 
 1. Haz commit y push de `vercel.json` y de los cambios de la tienda a GitHub.
