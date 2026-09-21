@@ -1,32 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "services": {
-    "frontend": {
-      "root": ".",
-      "framework": "vite",
-      "installCommand": "npm ci",
-      "buildCommand": "npm run build",
-      "outputDirectory": "dist",
-      "rewrites": [
-        { "source": "/(.*)", "destination": "/index.html" }
-      ]
-    },
-    "backend": {
-      "root": "backend",
-      "framework": "express",
-      "entrypoint": "app.cjs",
-      "installCommand": "npm ci",
-      "buildCommand": "npm run build"
+  "framework": "vite",
+  "installCommand": "npm ci && npm --prefix backend ci",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "backend/{dist/**,package.json,node_modules/.prisma/client/**}"
     }
   },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": { "service": "backend" }
+      "source": "/api/:path*",
+      "destination": "/api"
     },
     {
       "source": "/(.*)",
-      "destination": { "service": "frontend" }
+      "destination": "/index.html"
     }
   ]
 }

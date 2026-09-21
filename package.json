@@ -9,6 +9,7 @@
     "dev:web": "vite --strictPort",
     "dev:lan": "concurrently --kill-others --names API,WEB \"npm run dev:api\" \"npm run dev:web -- --host 0.0.0.0\"",
     "build": "vite build",
+    "build:vercel": "npm --prefix backend run build && npm run build",
     "lint": "eslint .",
     "test": "node --test tests/*.test.js",
     "preview": "vite preview"

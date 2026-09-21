@@ -1,7 +1,7 @@
-# Publicar Alpez con Vercel Services
+# Publicar Alpez con Vite y Vercel Functions
 
 Se publica un único proyecto desde la raíz del repositorio. `vercel.json`
-define el frontend Vite en `.` y la API Express en `backend`.
+compila el frontend Vite y el backend Express dentro del mismo despliegue.
 Las peticiones `/api` y `/api/*` llegan al backend conservando el prefijo;
 las demás llegan al frontend, que tiene el fallback a `index.html` para React Router.
 
@@ -10,17 +10,22 @@ JavaScript use el mismo formato que el cargador de la función Express. Los
 scripts administrativos usan `.mts` para conservar su ejecución ESM. El
 frontend mantiene su configuración ESM independiente.
 
-Vercel entra por `backend/app.cjs`, junto al `package.json` del servicio.
-Esta entrada carga `dist/app.js` después de `npm run build`, de forma que el
-empaquetador recorre los `require` de JavaScript ya compilado y resuelve las
-dependencias desde el backend, en vez de transformar directamente `src/app.ts`.
+Vercel entra por la función estándar `api/index.js`, que importa
+`backend/dist/app.js`. La instalación ejecuta `npm ci` tanto en la raíz como
+en `backend`; `build:vercel` compila ambas partes. Se incluyen explícitamente
+la salida del backend, su package.json y los archivos generados de Prisma.
+Las demás dependencias se incluyen mediante el rastreo de imports de Vercel.
+No se utiliza el modo Services.
 
 ## Pasos
 
 1. Haz commit y push de `vercel.json` y de los cambios de la tienda a GitHub.
-2. Importa el repositorio en Vercel. Selecciona **Services** y la raíz del
+2. Importa el repositorio en Vercel. Selecciona **Vite** y la raíz del
    repositorio como Root Directory (no `backend` ni la copia anidada).
-3. Si ya tienes abierta la pantalla de importación, pulsa **Refresh** después del push.
+3. Si el proyecto ya existe, cambia el preset de Services a Vite en Settings.
+   Conserva Root Directory en `./`. Quita overrides antiguos de instalación y
+   compilación para usar los comandos de vercel.json. Despliega el commit nuevo
+   sin reutilizar la caché de compilación al hacer esta transición.
 4. Agrega las siguientes variables de entorno en el proyecto para Production
    y los entornos de Preview que vayas a utilizar. No subas archivos `.env` a GitHub.
 
@@ -42,7 +47,7 @@ claves secretas en variables con prefijo `VITE_`: son públicas en el navegador.
 que la requieran, como el script local para conceder permisos; no es necesaria
 para la autenticación normal cuando está configurada `SUPABASE_ANON_KEY`.
 
-5. Pulsa **Deploy**. Cada servicio instala y compila sus dependencias por separado.
+5. Pulsa **Deploy**. El comando de instalación instala ambos package-lock.json.
    El postinstall del backend ya genera Prisma Client. No se ejecutan migraciones
    ni se reinicia la base de datos durante el despliegue.
 6. En Supabase → Authentication → URL Configuration, configura Site URL con
