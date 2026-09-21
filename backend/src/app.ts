@@ -24,9 +24,21 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.get('/api/health/ready', async (_req: Request, res: Response) => {
   try {
     await prisma.product.count();
-    res.json({ ok: true, database: 'connected' });
+    res.json({
+      ok: true,
+      database: 'connected',
+      configuration: {
+        databaseUrl: Boolean(process.env.DATABASE_URL),
+        supabaseUrl: Boolean(process.env.SUPABASE_URL),
+        supabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+      },
+    });
   } catch {
-    res.status(503).json({ ok: false, database: 'unavailable' });
+    res.status(503).json({
+      ok: false,
+      database: 'unavailable',
+      configuration: { databaseUrl: Boolean(process.env.DATABASE_URL) },
+    });
   }
 });
 
