@@ -1,6 +1,7 @@
+import { WhatsAppIcon } from '../components/SocialIcon';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import ProductImage from '../components/ProductImage';
 import Modal from '../components/Modal';
 import useDocumentMeta from '../hooks/useDocumentMeta';
@@ -54,8 +55,8 @@ export default function Cart({ cart, products, isLoading, error, refreshProducts
           </section><aside className="cart-summary"><h2>Tu pedido</h2><p>{cart.count} {cart.count === 1 ? 'joya seleccionada' : 'joyas seleccionadas'}</p><div className="cart-subtotal"><span>Subtotal estimado</span><strong>{cartSubtotal(rows) > 0 ? formatPrice(cartSubtotal(rows)) : 'Por confirmar'}</strong></div>
             {rows.some(row => row.product && !(row.product.price > 0)) && <p>Hay piezas con precio por confirmar que no se incluyen en el subtotal.</p>}
             <p>Confirmamos disponibilidad, pago y envío contigo por WhatsApp. Agregar piezas no las reserva.</p>
-            {verified ? <a className="shop-button" href={buildWhatsAppLink(generateCartMessage(rows, window.location.origin))} target="_blank" rel="noopener noreferrer"><MessageCircle size={19} />Abrir WhatsApp con mi pedido</a>
-              : <button className="shop-button" type="button" disabled={checking} onClick={verify}><MessageCircle size={19} />{checking ? 'Verificando piezas…' : 'Continuar por WhatsApp'}</button>}
+            {verified ? <a className="shop-button" href={buildWhatsAppLink(generateCartMessage(rows, window.location.origin))} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />Abrir WhatsApp con mi pedido</a>
+              : <button className="shop-button" type="button" disabled={checking} onClick={verify}><WhatsAppIcon size={19} />{checking ? 'Verificando piezas…' : 'Continuar por WhatsApp'}</button>}
             {notice && <p role="status" className="cart-notice">{notice}</p>}
             <p className="cart-note">Tu carrito se conserva en este navegador. El pedido se envía cuando lo confirmas en WhatsApp.</p>
           </aside></div>}

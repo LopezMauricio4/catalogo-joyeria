@@ -1,4 +1,5 @@
-import { ArrowRight, Eye, MessageCircle, Quote } from "lucide-react";
+import { WhatsAppIcon } from '../components/SocialIcon';
+import { ArrowRight, Eye, Quote } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import JewelryCard from "../components/JewelryCard";
@@ -120,7 +121,7 @@ const Home = ({ products, isLoading = false }) => {
               </Link>
               <a href={whatsappLink} target="_blank" rel="noreferrer" className="luxury-btn luxury-btn-secondary">
                 Asesoría WhatsApp
-                <MessageCircle className="h-4 w-4 text-forest-600" />
+                <WhatsAppIcon className="h-4 w-4 text-forest-600" />
               </a>
             </div>
           </div>
@@ -205,7 +206,7 @@ const Home = ({ products, isLoading = false }) => {
             <p>¿Ya tienes una joya de Alpez? Nos encantará saber cómo fue tu experiencia y qué hace especial tu pieza.</p>
           </div>
           <div className="customer-reviews-action">
-            <a href={buildWhatsAppLink('Hola, Alpez. Ya compré una joya y me gustaría compartir mi experiencia: ')} target="_blank" rel="noopener noreferrer" className="shop-button"><MessageCircle size={18} />Compartir mi experiencia</a>
+            <a href={buildWhatsAppLink('Hola, Alpez. Ya compré una joya y me gustaría compartir mi experiencia: ')} target="_blank" rel="noopener noreferrer" className="shop-button"><WhatsAppIcon size={18} />Compartir mi experiencia</a>
             <p>Conversemos por WhatsApp.<br />Tu opinión nos ayuda a mejorar.</p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import SocialIcon from './SocialIcon';
 import ShopNavLink from './ShopNavLink';
 import { useMatch } from 'react-router-dom';
 
@@ -8,16 +9,6 @@ const navLinks = [
   { to: "/catalogo?material=oro-18k", label: "Oro 18k" },
   { to: "/catalogo?material=laminado", label: "Oro laminado 18k" },
 ];
-
-const SocialIcon = ({ type }) => {
-  if (type === "instagram") {
-    return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" className="fill-current stroke-none" /></svg>;
-  }
-  if (type === "tiktok") {
-    return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current"><path d="M15.5 3h3c.2 1.8 1.2 3.1 3 3.6v3.1c-1.1-.1-2.1-.5-3-1.1v6.1a6.3 6.3 0 1 1-5.4-6.2v3.2a3.1 3.1 0 1 0 2.3 3V3Z" /></svg>;
-  }
-  return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current"><path d="M14 8h3V4h-3c-3.31 0-5 1.69-5 5v3H6v4h3v8h4v-8h3.5l.5-4H13V9c0-.67.33-1 1-1Z" /></svg>;
-};
 
 const Footer = () => {
   const isProductDetail = useMatch('/producto/:id');
@@ -91,6 +82,7 @@ const Footer = () => {
           <p>© {year} Alpez Joyería. Todos los derechos reservados.</p>
           <p className="tracking-[0.14em] uppercase text-ivory-soft/40">Oro 18k · Oro laminado 18k</p>
         </div>
+        <p className="px-6 pb-5 text-center text-[11px] text-ivory-soft/60">Iconos: <a className="underline" href="https://www.flaticon.es/iconos-gratis/popular" target="_blank" rel="noopener noreferrer">Indygo</a> · <a className="underline" href="https://www.flaticon.es/iconos-gratis/tik-tok" target="_blank" rel="noopener noreferrer">TikTok por Magnific</a> · <a className="underline" href="https://www.flaticon.es/iconos-gratis/whatsapp" target="_blank" rel="noopener noreferrer">WhatsApp por Magnific</a> — Flaticon</p>
       </div>
     </footer>
   );
