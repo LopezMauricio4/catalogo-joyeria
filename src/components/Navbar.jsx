@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { Menu as MenuIcon, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
 
@@ -31,7 +31,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
 
   const isLoggedIn = user && user.role !== "guest";
   const searchButton = <button type="button" className="shop-icon-button text-ink-soft" aria-label="Buscar joyas" aria-expanded={isSearchOpen} aria-controls="header-search" onClick={toggleSearch}><Search size={20} strokeWidth={1.8} /></button>;
-  const cartButton = <Link to="/carrito" className="shop-icon-button cart-nav-link text-ink-soft" aria-current={location.pathname === '/carrito' ? 'page' : undefined} aria-label={`Carrito, ${cartCount} ${cartCount === 1 ? 'pieza' : 'piezas'}`} onClick={() => { setIsOpen(false); setIsAccountOpen(false); }}><ShoppingBag size={21} strokeWidth={1.7} />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
+  const cartButton = <Link to="/carrito" className="shop-icon-button cart-nav-link text-ink-soft" aria-current={location.pathname === '/carrito' ? 'page' : undefined} aria-label={`Carrito, ${cartCount} ${cartCount === 1 ? 'pieza' : 'piezas'}`} onClick={() => { setIsOpen(false); setIsAccountOpen(false); }}><ShoppingCart size={21} strokeWidth={1.7} />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
 
   const toggleMobileMenu = () => {
     setIsOpen((open) => !open);

@@ -1,6 +1,6 @@
 import { WhatsAppIcon } from '../components/SocialIcon';
 import { useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ShoppingBag, ZoomIn } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ShoppingCart, ZoomIn } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JewelryCard from '../components/JewelryCard';
 import ProductImage from '../components/ProductImage';
@@ -22,7 +22,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const label = soldOut ? 'Consultar alternativas' : 'Pedir';
   const quantityInCart = cart.items.find(item => item.id === String(product.id))?.quantity || 0;
   const atLimit = quantityInCart >= stockLimit(product);
-  const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{!soldOut && <button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingBag size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
+  const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{!soldOut && <button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
   return <div className="product-page shop-shell">
     <Link className="product-back" to={catalogReturn}><ArrowLeft size={17} />Volver a las piezas</Link>
     <section className="product-layout" aria-label={product.name}>
