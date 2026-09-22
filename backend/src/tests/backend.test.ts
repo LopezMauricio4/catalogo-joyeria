@@ -14,7 +14,7 @@ test('validación rechaza stock fraccionario, precio inválido y material descon
 });
 
 test('editar usa update, mantiene el ID y conserva todas las imágenes', async () => {
-  const existing = { ...payload, id: 'same-id', images: [payload.image, 'https://example.com/second.jpg'] };
+  const existing = { ...payload, visible: false, id: 'same-id', images: [payload.image, 'https://example.com/second.jpg'] };
   let updated: any;
   const service = new ProductService({ product: {
     findUnique: async () => existing,
@@ -25,6 +25,7 @@ test('editar usa update, mantiene el ID y conserva todas las imágenes', async (
   assert.equal(result.name, 'Editado');
   assert.equal(result.stock, 0);
   assert.equal(result.featured, true);
+  assert.equal(result.visible, false);
   assert.deepEqual(result.images, existing.images);
 });
 
@@ -62,6 +63,16 @@ test('base real: crear, leer, editar y eliminar dentro de una transacción rever
       assert.ok(created.id);
       const found = await tx.product.findUnique({ where: { id: created.id } });
       assert.equal(found?.name, payload.name);
+      assert.equal(created.visible, true);
+      await service.cambiarVisibilidad(created.id, false);
+      assert.ok(!(await service.obtenerProductos()).some(item => item.id === created.id));
+      assert.ok((await service.obtenerProductosAdmin()).some(item => item.id === created.id));
+      await tx.$executeRawUnsafe('SET LOCAL ROLE anon');
+      const hiddenRows = await tx.$queryRawUnsafe<any[]>('SELECT id FROM public."Product" WHERE id = $1', created.id);
+      assert.equal(hiddenRows.length, 0);
+      await tx.$executeRawUnsafe('RESET ROLE');
+      await service.cambiarVisibilidad(created.id, true);
+      assert.ok((await service.obtenerProductos()).some(item => item.id === created.id));
       await service.actualizarProducto(created.id, { ...payload, name: 'Editado', price: 200, stock: 0, featured: true });
       const updated = await tx.product.findUnique({ where: { id: created.id } });
       assert.equal(updated?.price, 200);
@@ -79,4 +90,31 @@ test('base real: crear, leer, editar y eliminar dentro de una transacción rever
       throw rollback;
     }, { timeout: 20000 }), (error) => error === rollback);
   } finally { await prisma.$disconnect(); }
+});
+
+test('visibilidad exige booleano y solo actualiza esa propiedad', async () => {
+  let args: any;
+  const existing = { ...payload, id: 'id', visible: true, images: [payload.image] };
+  const service = new ProductService({ product: { update: async (input: any) => { args = input; return { ...existing, ...input.data }; } } } as any);
+  for (const invalid of [undefined, null, 'false', 0]) await assert.rejects(service.cambiarVisibilidad('id', invalid), { status: 400 });
+  assert.equal(args, undefined);
+  const hidden = await service.cambiarVisibilidad('id', false);
+  assert.deepEqual(args, { where: { id: 'id' }, data: { visible: false } });
+  assert.equal(hidden.stock, existing.stock);
+  assert.deepEqual(hidden.images, existing.images);
+  assert.equal((await service.cambiarVisibilidad('id', true)).visible, true);
+});
+
+test('lista pública filtra ocultos y lista admin incluye todos', async () => {
+  const queries: any[] = [];
+  const service = new ProductService({ product: { findMany: async (args: any) => { queries.push(args); return []; } } } as any);
+  await service.obtenerProductos();
+  await service.obtenerProductosAdmin();
+  assert.deepEqual(queries[0].where, { visible: true });
+  assert.equal(queries[1].where, undefined);
+});
+
+test('ocultar producto inexistente devuelve 404', async () => {
+  const service = new ProductService({ product: { update: async () => { throw Object.assign(new Error(), { code: 'P2025' }); } } } as any);
+  await assert.rejects(service.cambiarVisibilidad('missing', false), { status: 404 });
 });

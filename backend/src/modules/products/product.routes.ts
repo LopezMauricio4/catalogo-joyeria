@@ -8,6 +8,8 @@ const productController = new ProductController();
 
 // Lectura — pública, cualquiera puede ver el catálogo
 router.get('/', productController.listar);
+router.get('/admin', requireAuth, requireAdmin, productController.listarAdmin);
+router.patch('/:id/visibility', requireAuth, requireAdmin, productController.visibilidad);
 
 // Escritura — antes estaban abiertas a cualquiera que conociera la URL.
 // Ahora exigen sesión válida (requireAuth) Y rol ADMIN (requireAdmin).

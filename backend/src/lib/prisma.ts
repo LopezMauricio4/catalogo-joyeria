@@ -13,6 +13,7 @@ if (!connectionString) {
 }
 
 const adapter = new PrismaPg({ connectionString });
+// Al regenerar Prisma tras cambiar el esquema, reiniciar el servidor de desarrollo.
 const prisma = globalThis.prisma ?? new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== 'production') {

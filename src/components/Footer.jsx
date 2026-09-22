@@ -1,4 +1,5 @@
 import ShopNavLink from './ShopNavLink';
+import { useMatch } from 'react-router-dom';
 
 const navLinks = [
   { to: "/", label: "Inicio" },
@@ -19,7 +20,9 @@ const SocialIcon = ({ type }) => {
 };
 
 const Footer = () => {
+  const isProductDetail = useMatch('/producto/:id');
   const year = new Date().getFullYear();
+  if (isProductDetail) return null;
 
   return (
     <footer className="border-t border-forest-800 bg-forest-900 text-ivory-soft/90">

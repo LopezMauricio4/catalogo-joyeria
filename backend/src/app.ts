@@ -29,8 +29,8 @@ app.get('/api/health/ready', async (_req: Request, res: Response) => {
       database: 'connected',
       configuration: {
         databaseUrl: Boolean(process.env.DATABASE_URL),
-        supabaseUrl: Boolean(process.env.SUPABASE_URL),
-        supabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY),
+        supabaseUrl: Boolean(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL),
+        supabaseAnonKey: Boolean(process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY),
       },
     });
   } catch {

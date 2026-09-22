@@ -62,7 +62,21 @@ export class ProductService {
   }
 
   async obtenerProductos(): Promise<ProductoRespuesta[]> {
+    return this.db.product.findMany({ where: { visible: true }, orderBy: { createdAt: 'desc' } });
+  }
+
+  async obtenerProductosAdmin(): Promise<ProductoRespuesta[]> {
     return this.db.product.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async cambiarVisibilidad(id: string, visible: unknown): Promise<ProductoRespuesta> {
+    if (typeof visible !== 'boolean') throw new ProductError('La visibilidad debe ser true o false.');
+    try {
+      return await this.db.product.update({ where: { id }, data: { visible } });
+    } catch (error: any) {
+      if (error.code === 'P2025') throw new ProductError('Producto no encontrado.', 404);
+      throw error;
+    }
   }
 
   async eliminarProducto(id: string): Promise<ProductoRespuesta> {

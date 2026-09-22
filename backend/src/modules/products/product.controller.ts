@@ -17,6 +17,13 @@ export class ProductController {
   listar = async (_req: Request, res: Response) => {
     res.json(await productService.obtenerProductos());
   };
+  listarAdmin = async (_req: Request, res: Response) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(await productService.obtenerProductosAdmin());
+  };
+  visibilidad = async (req: Request, res: Response) => {
+    res.json({ ok: true, product: await productService.cambiarVisibilidad(id(req), req.body?.visible) });
+  };
   eliminar = async (req: Request, res: Response) => {
     res.json({ ok: true, product: await productService.eliminarProducto(id(req)) });
   };

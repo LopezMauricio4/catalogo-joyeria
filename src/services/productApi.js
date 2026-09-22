@@ -38,6 +38,7 @@ const normalizeProduct = (product) => {
     features: rawFeatures.map((feature) => String(feature).trim()).filter(Boolean),
     stock: product.stock == null ? null : Number(product.stock),
     featured: Boolean(product.featured ?? product.destacado),
+    visible: product.visible !== false,
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
   };
@@ -53,6 +54,24 @@ export const fetchProducts = async () => {
     if (!Array.isArray(data)) throw new Error('La respuesta del catálogo no es válida.');
     return data.map(normalizeProduct);
   } finally { clearTimeout(timeout); }
+};
+
+export const fetchAdminProducts = async (signal) => {
+  const response = await fetch(`${API_BASE_URL}/products/admin`, { headers: await getAuthHeaders(), signal, cache: 'no-store' });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'No se pudieron cargar los productos.');
+  if (!Array.isArray(data)) throw new Error('La respuesta de productos no es válida.');
+  return data.map(normalizeProduct);
+};
+
+export const setProductVisibility = async (id, visible) => {
+  const response = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(id)}/visibility`, {
+    method: 'PATCH', headers: { ...await getAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visible }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'No se pudo cambiar la visibilidad.');
+  return normalizeProduct(data.product);
 };
 
 export const createProduct = async (formData) => {

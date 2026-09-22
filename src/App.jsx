@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -8,7 +8,7 @@ import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";
 import AuthPage from "./pages/AuthPage";
 import AdminProductsPage from "./pages/AdminProductsPage";
-import { createProduct, updateProduct, deleteProduct, fetchProducts } from "./services/productApi";
+import { createProduct, updateProduct, deleteProduct, fetchProducts, setProductVisibility } from "./services/productApi";
 import { mapSupabaseUser, signOut } from "./services/authApi";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { useToast } from "./hooks/useToast";
@@ -16,14 +16,34 @@ import useCart from './hooks/useCart';
 import Cart from './pages/Cart';
 import GuaranteesPage from "./pages/GuaranteesPage";
 
-function StoreFooter() {
-  const { pathname } = useLocation();
-  return pathname.startsWith('/producto/') ? null : <Footer />;
-}
-
 function RouteScroll() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [pathname]);
+  const location = useLocation();
+  const positions = useRef(new Map());
+  const catalogPositions = useRef(new Map());
+  const previousPath = useRef(null);
+  useLayoutEffect(() => {
+    const original = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    return () => { window.history.scrollRestoration = original; };
+  }, []);
+  useLayoutEffect(() => {
+    const { key, pathname, search } = location;
+    const url = pathname + search;
+    const returningToCatalog = pathname === '/catalogo' && previousPath.current?.startsWith('/producto/');
+    const top = positions.current.get(key) ?? (returningToCatalog
+      ? catalogPositions.current.get(url)
+      : previousPath.current === pathname ? window.scrollY : 0) ?? 0;
+    // Restore before paint: never display the catalog at the top for a frame.
+    window.scrollTo({ top, behavior: 'instant' });
+    previousPath.current = pathname;
+    const remember = () => {
+      positions.current.set(key, window.scrollY);
+      if (pathname === '/catalogo') catalogPositions.current.set(url, window.scrollY);
+    };
+    remember();
+    window.addEventListener('scroll', remember, { passive: true });
+    return () => window.removeEventListener('scroll', remember);
+  }, [location]);
   return null;
 }
 
@@ -70,9 +90,16 @@ function App() {
 
   const handleSaveProduct = async (payload, editingId) => {
     const saved = editingId ? await updateProduct(editingId, payload) : await createProduct(payload);
-    setProducts((items) => editingId
-      ? items.map((item) => item.id === saved.id ? saved : item)
-      : [saved, ...items]);
+    syncPublicProduct(saved);
+    return saved;
+  };
+  const syncPublicProduct = (saved) => setProducts(items => saved.visible
+    ? items.some(item => item.id === saved.id) ? items.map(item => item.id === saved.id ? saved : item) : [saved, ...items]
+    : items.filter(item => item.id !== saved.id));
+  const handleVisibility = async (id, visible) => {
+    const saved = await setProductVisibility(id, visible);
+    syncPublicProduct(saved);
+    return saved;
   };
   const handleDeleteProduct = async (id) => {
     await deleteProduct(id);
@@ -98,11 +125,11 @@ function App() {
             <Route path="/garantias-y-cambios" element={<GuaranteesPage />} />
             <Route path="/auth" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : <AuthPage onLogin={setUser} user={user} />} />
             <Route path="/admin/productos" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : user.role === "admin" ? (
-              <AdminProductsPage products={products} onSaveProduct={handleSaveProduct} onDeleteProduct={handleDeleteProduct} />
+              <AdminProductsPage onSaveProduct={handleSaveProduct} onDeleteProduct={handleDeleteProduct} onVisibilityChange={handleVisibility} />
             ) : <Navigate to="/auth" replace />} />
           </Routes>
         </main>
-        <StoreFooter />
+        <Footer />
         <FloatingWhatsApp />
       </div>
     </Router>

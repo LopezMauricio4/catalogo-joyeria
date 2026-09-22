@@ -1,437 +1,100 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2, Pencil, Plus, Save, Search, ShieldCheck, Star, Trash2 } from "lucide-react";
-import { useToast } from "../hooks/useToast";
-import { categories, materialLabels } from "../data/mockProducts";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus, Pencil, Eye, EyeOff, Trash2, RefreshCw, Search } from 'lucide-react';
+import { useToast } from '../hooks/useToast';
+import { categories, materialLabels } from '../data/mockProducts';
+import { fetchAdminProducts } from '../services/productApi';
+import { formatPrice, normalizeText } from '../utils/catalog';
+import ProductImage from '../components/ProductImage';
+import Modal from '../components/Modal';
+import ProductEditor from './ProductEditor';
 
-const emptyProduct = {
-  id: "",
-  name: "",
-  material: "oro-18k",
-  category: "anillos",
-  price: "",
-  stock: "10",
-  featured: false,
-  image: "",
-  description: "",
-  features: "",
-};
-
-// useToast requiere que App.jsx esté envuelto en <ToastProvider>.
-// Si todavía no lo agregaste, esto degrada a un no-op silencioso
-// en vez de romper la página — ver ToastProvider.jsx para conectarlo.
-const useSafeToast = () => {
-  try {
-    return useToast();
-  } catch {
-    return { showToast: () => {} };
-  }
-};
-
-const ImagePreview = ({ file, index }) => {
-  const ref = useRef(null);
+export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVisibilityChange, loadProducts = fetchAdminProducts }) {
+  const { showToast } = useToast();
+  const [products, setProducts] = useState([]);
+  const [view, setView] = useState('home');
+  const [editing, setEditing] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [material, setMaterial] = useState('');
+  const [category, setCategory] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const actionLock = useRef(false);
   useEffect(() => {
-    const url = URL.createObjectURL(file);
-    ref.current.src = url;
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-  return <img ref={ref} alt={`Vista previa ${index + 1}`} className="h-16 w-16 rounded-xl border border-line object-cover" />;
-};
-
-const AdminProductsPage = ({ products, onSaveProduct, onDeleteProduct }) => {
-  const { showToast } = useSafeToast();
-  const [form, setForm] = useState(emptyProduct);
-  const [editingId, setEditingId] = useState(null);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [pendingDeleteId, setPendingDeleteId] = useState(null);
-  const [search, setSearch] = useState("");
-
-  const filteredProducts = useMemo(() => {
-    const normalized = search.trim().toLowerCase();
-    if (!normalized) return products;
-    return products.filter((product) => product.name.toLowerCase().includes(normalized));
-  }, [products, search]);
-
-  const handleChange = (event) => {
-    const { name, value, type, checked } = event.target;
-    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    let active = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    loadProducts(controller.signal).then(items => { if (active) setProducts(items); }).catch(error => {
+      if (active) setLoadError(controller.signal.aborted ? 'La carga tardó demasiado. Intenta actualizar.' : error.message);
+    }).finally(() => { clearTimeout(timeout); if (active) setLoading(false); });
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
+  }, [revision, loadProducts]);
+  const filtered = useMemo(() => products.filter(product =>
+    (filter === 'all' || product.visible === (filter === 'visible')) &&
+    (!material || product.material === material) && (!category || product.category === category) &&
+    normalizeText(`${product.name} ${product.description}`).includes(normalizeText(search))
+  ), [products, filter, material, category, search]);
+  const replaceProduct = saved => setProducts(items => items.some(item => item.id === saved.id)
+    ? items.map(item => item.id === saved.id ? saved : item) : [saved, ...items]);
+  const browse = selected => { setFilter(selected); setView('products'); };
+  const edit = product => { setEditing(product); setView('editor'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const mutate = async operation => {
+    if (actionLock.current) return;
+    actionLock.current = true; setBusy(true);
+    try { await operation(); }
+    catch (error) { showToast(error.message || 'No se pudo guardar el cambio.', 'error'); }
+    finally { actionLock.current = false; setBusy(false); }
   };
-
-  const handleFileChange = (event) => {
-    setSelectedFiles(Array.from(event.target.files || []));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setFormError("");
-
-    const trimmedName = form.name.trim();
-    const trimmedDescription = form.description.trim();
-    const stockValue = Number(form.stock);
-
-    if (!trimmedName || !trimmedDescription || Number(form.price) <= 0) {
-      setFormError("Completa nombre, descripción y un precio válido antes de guardar.");
-      return;
-    }
-
-    if (!Number.isSafeInteger(stockValue) || stockValue < 0) {
-      setFormError("El stock debe ser un número igual o mayor a 0.");
-      return;
-    }
-
-    const productPayload = new FormData();
-    productPayload.append("name", trimmedName);
-    productPayload.append("description", trimmedDescription);
-    productPayload.append("price", String(Number(form.price)));
-    productPayload.append("material", form.material);
-    productPayload.append("category", form.category);
-    // Antes esto iba fijo en "10" y "false" incluso al editar — se perdía el
-    // stock real y el estado de "destacado" de cada producto cada vez que se
-    // guardaba una edición. Ahora se manda lo que realmente hay en el formulario.
-    productPayload.append("stock", String(stockValue));
-    productPayload.append("featured", String(form.featured));
-    productPayload.append("features", form.features || "");
-
-    if (form.image && form.image.trim()) {
-      productPayload.append("image", form.image.trim());
-    }
-
-    selectedFiles.forEach((file) => {
-      productPayload.append("imagenes", file);
-    });
-
-    try {
-      setIsSaving(true);
-      await onSaveProduct(productPayload, editingId);
-      showToast(editingId ? "Producto actualizado" : "Producto creado", "success");
-      setForm(emptyProduct);
-      setSelectedFiles([]);
-      setEditingId(null);
-    } catch (error) {
-      setFormError(error.message || "No se pudo guardar el producto.");
-      showToast(error.message || "No se pudo guardar el producto.", "error");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleEdit = (product) => {
-    setEditingId(product.id);
-    setSelectedFiles([]);
-    setFormError("");
-    setForm({
-      ...product,
-      price: String(product.price),
-      stock: String(product.stock ?? 0),
-      featured: Boolean(product.featured),
-      features: Array.isArray(product.features) ? product.features.join(", ") : "",
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleReset = () => {
-    setForm(emptyProduct);
-    setSelectedFiles([]);
-    setEditingId(null);
-    setFormError("");
-  };
-
-  const handleDeleteClick = async (productId) => {
-    if (pendingDeleteId !== productId) {
-      setPendingDeleteId(productId);
-      return;
-    }
-
-    try {
-      await onDeleteProduct(productId);
-      showToast("Producto eliminado", "success");
-    } catch {
-      showToast("No se pudo eliminar el producto.", "error");
-    } finally {
-      setPendingDeleteId(null);
-    }
-  };
-
-  return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-      <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="luxury-eyebrow">Administrador</p>
-          <h1 className="mt-3 text-5xl font-medium tracking-[-0.04em] text-ink md:text-6xl">
-            Crear y editar productos
-          </h1>
-        </div>
-        <Link to="/catalogo" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-soft">
-          <ArrowLeft className="h-4 w-4" />
-          Volver al catálogo
-        </Link>
+  const toggleVisibility = product => mutate(async () => {
+    replaceProduct(await onVisibilityChange(product.id, !product.visible));
+    showToast(product.visible ? 'Producto oculto del catálogo' : 'Producto visible en el catálogo', 'success');
+  });
+  const remove = () => mutate(async () => {
+    await onDeleteProduct(pendingDelete.id);
+    setProducts(items => items.filter(item => item.id !== pendingDelete.id));
+    setPendingDelete(null);
+    showToast('Producto eliminado', 'success');
+  });
+  if (view === 'editor') return <ProductEditor key={editing?.id || 'new'} product={editing}
+    onSaveProduct={async (payload, id) => {
+      replaceProduct(await onSaveProduct(payload, id));
+      setFilter('all'); setSearch(''); setMaterial(''); setCategory('');
+    }} onCancel={() => setView('products')} />;
+  return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="admin-toolbar mb-8"><div><p className="luxury-eyebrow">Administrador</p><h1 className="mt-3 text-5xl">Tu catálogo</h1></div><Link to="/catalogo">Ver catálogo público →</Link></div>
+    <nav className="admin-options" aria-label="Administrar productos">
+      <button onClick={() => edit(null)} disabled={busy || loading}><Plus /><strong>Agregar producto</strong><span>Crea una nueva pieza</span></button>
+      <button aria-current={view === 'products' && filter !== 'hidden' ? 'page' : undefined} disabled={busy} onClick={() => browse('all')}><Pencil /><strong>Administrar productos</strong><span>Edita, oculta o elimina</span></button>
+      <button aria-current={view === 'products' && filter === 'hidden' ? 'page' : undefined} disabled={busy} onClick={() => browse('hidden')}><EyeOff /><strong>Productos ocultos</strong><span>Revísalos y vuelve a mostrarlos</span></button>
+    </nav>
+    {view === 'home' && <p className="mt-6 text-ink-muted">Selecciona una opción para comenzar.</p>}
+    {view === 'products' && <section className="mt-8" aria-label="Lista de productos">
+      <div className="admin-toolbar"><h2 className="text-3xl">{filter === 'hidden' ? 'Productos ocultos' : 'Administrar productos'}</h2><button className="shop-button" disabled={loading || busy} onClick={() => { setLoading(true); setLoadError(''); setRevision(n => n + 1); }}><RefreshCw size={16} />Actualizar lista</button></div>
+      <div className="admin-filters">
+        <label>Buscar producto<div className="admin-search"><Search size={18} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre o descripción…" /></div></label>
+        <label>Visibilidad<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos los productos</option><option value="visible">Visibles</option><option value="hidden">Ocultos</option></select></label>
+        <label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos los materiales</option>{Object.entries(materialLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas las categorías</option>{categories.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
       </div>
-
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-card-lg border border-line bg-ivory-soft/90 p-6 shadow-[0_20px_45px_rgba(11,37,27,0.04)] md:p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-sage text-ink-soft">
-              {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            </div>
-            <h2 className="text-3xl font-medium text-ink">
-              {editingId ? "Editar producto" : "Nuevo producto"}
-            </h2>
+      {loadError ? <p role="alert" className="my-6 text-red-700">{loadError} Usa “Actualizar lista” para reintentar.</p> : loading ? <p role="status" className="my-6">Cargando productos…</p> : <>
+        <p role="status" className="my-5 text-sm text-ink-muted">{filtered.length} productos</p>
+        <div className="admin-product-grid">{filtered.map(product => <article key={product.id} className="admin-product-card">
+          <button className="admin-product-photo" disabled={busy} onClick={() => edit(product)} aria-label={`Editar ${product.name}`}><ProductImage src={product.image} alt={product.name} /></button>
+          <div className="admin-product-info"><span className={`admin-status ${product.visible ? '' : 'is-hidden'}`}>{product.visible ? <Eye size={13} /> : <EyeOff size={13} />}{product.visible ? 'Visible' : 'Oculto'}</span>
+            <p className="mt-3 text-xs text-ink-muted">{materialLabels[product.material]}</p><h3 className="mt-1 text-2xl">{product.name}</h3><p className="mt-2 font-semibold">{formatPrice(product.price)} <small>COP</small></p><p className="mt-1 text-sm text-ink-muted">Stock: {product.stock ?? 'Sin definir'}{product.featured ? ' · Destacado' : ''}</p>
+            <div className="admin-card-actions"><button disabled={busy} onClick={() => edit(product)}><Pencil size={16} />Editar</button><button disabled={busy} onClick={() => toggleVisibility(product)}>{product.visible ? <EyeOff size={16} /> : <Eye size={16} />}{product.visible ? 'Ocultar' : 'Mostrar'}</button><button disabled={busy} className="admin-delete" onClick={() => setPendingDelete(product)}><Trash2 size={16} />Eliminar</button></div>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
-                Nombre
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                  placeholder="Ej. Anillo Aurora"
-                />
-              </label>
-
-              <label className="block text-sm text-ink-muted">
-                Precio
-                <input
-                  name="price"
-                  type="number"
-                  min="1"
-                  value={form.price}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                  placeholder="4200"
-                />
-              </label>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
-                Categoría
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                >
-                  {categories.map((category) => (
-                    <option key={category.key} value={category.key}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block text-sm text-ink-muted">
-                Material
-                <select
-                  name="material"
-                  value={form.material}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                >
-                  <option value="oro-18k">{materialLabels["oro-18k"]}</option>
-                  <option value="laminado">{materialLabels.laminado}</option>
-                </select>
-              </label>
-            </div>
-
-            {/* Stock real — antes se mandaba "10" fijo sin importar lo que hubiera */}
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
-                Stock disponible
-                <input
-                  name="stock"
-                  type="number"
-                  min="0"
-                  value={form.stock}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                  placeholder="10"
-                />
-              </label>
-
-              <label className="mt-2 flex items-center gap-3 self-end rounded-2xl border border-line bg-ivory-soft px-4 py-3.5 text-sm text-ink-soft">
-                <input
-                  name="featured"
-                  type="checkbox"
-                  checked={form.featured}
-                  onChange={handleChange}
-                  className="h-4 w-4 rounded border-line-strong text-gold-500 focus:ring-gold-400"
-                />
-                <span className="flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 text-gold-500" />
-                  Marcar como destacado
-                </span>
-              </label>
-            </div>
-
-            <label className="block text-sm text-ink-muted">
-              Imagen (URL opcional)
-              <input
-                name="image"
-                value={form.image}
-                onChange={handleChange}
-                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                placeholder="https://images.unsplash.com/..."
-              />
-            </label>
-
-            <label className="block text-sm text-ink-muted">
-              Imágenes del producto
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileChange}
-                className="mt-2 block w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-sm text-ink-soft outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-sage file:px-3 file:py-2 file:text-[9px] file:font-medium file:uppercase file:tracking-[0.18em] file:text-ink-soft focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-              />
-              {selectedFiles.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedFiles.map((file, index) => (
-                    <ImagePreview key={`${file.name}-${index}`} file={file} index={index} />
-                  ))}
-                </div>
-              )}
-            </label>
-
-            <label className="block text-sm text-ink-muted">
-              Descripción
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                rows="4"
-                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                placeholder="Describe la pieza..."
-              />
-            </label>
-
-            <label className="block text-sm text-ink-muted">
-              Características
-              <textarea
-                name="features"
-                value={form.features}
-                onChange={handleChange}
-                rows="3"
-                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                placeholder="18 kilates, Acabado brillante, Diseño atemporal"
-              />
-            </label>
-
-            {formError && (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {formError}
-              </p>
-            )}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="luxury-btn luxury-btn-primary disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {editingId ? "Guardar cambios" : "Crear producto"}
-              </button>
-
-              <button type="button" onClick={handleReset} className="luxury-btn luxury-btn-secondary">
-                Limpiar
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <aside className="rounded-card-lg border border-line bg-stone p-6 shadow-[0_20px_45px_rgba(11,37,27,0.04)] md:p-8">
-          <div className="mb-5 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5 text-ink-soft" />
-              <h2 className="text-2xl font-medium text-ink">Productos actuales</h2>
-            </div>
-            <span className="text-xs text-ink-faint">{filteredProducts.length}</span>
-          </div>
-
-          <div className="relative mb-5">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-faint" />
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar producto..."
-              className="w-full rounded-full border border-line bg-white py-2.5 pl-9 pr-4 text-sm text-ink-soft outline-none transition focus:border-gold-400"
-            />
-          </div>
-
-          <div className="max-h-[640px] space-y-4 overflow-y-auto pr-1">
-            {filteredProducts.map((product) => {
-              const outOfStock = typeof product.stock === "number" && product.stock <= 0;
-              const isPendingDelete = pendingDeleteId === product.id;
-
-              return (
-                <div key={product.id} className="rounded-card border border-line bg-white p-4 shadow-sm">
-                  <div className="flex gap-3">
-                    <img src={product.image} alt={product.name} className="h-20 w-20 rounded-xl object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-                          {materialLabels[product.material]}
-                        </p>
-                        {product.featured && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gold-100 px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-gold-700">
-                            <Star className="h-2.5 w-2.5" />
-                            Destacado
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="mt-1 truncate text-base font-medium text-ink-soft">{product.name}</h3>
-                      <div className="mt-1 flex items-center gap-2">
-                        <p className="text-sm font-semibold text-ink-soft">
-                          ${product.price.toLocaleString("es-MX")}
-                        </p>
-                        <span className={`text-xs ${outOfStock ? "text-red-600" : "text-ink-faint"}`}>
-                          {outOfStock ? "Sin stock" : `Stock: ${product.stock}`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(product)}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-sage px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-forest-800 transition hover:bg-sage/70"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteClick(product.id)}
-                      onBlur={() => setPendingDeleteId(null)}
-                      className={`inline-flex flex-1 items-center justify-center gap-2 rounded-full border px-3 py-2 text-[10px] font-medium uppercase tracking-[0.18em] transition ${
-                        isPendingDelete
-                          ? "border-red-300 bg-red-50 text-red-700"
-                          : "border-line bg-white text-ink-faint hover:border-red-200 hover:text-red-600"
-                      }`}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {isPendingDelete ? "¿Confirmar?" : "Borrar"}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-
-            {filteredProducts.length === 0 && (
-              <p className="py-8 text-center text-sm text-ink-faint">No hay productos que coincidan.</p>
-            )}
-          </div>
-        </aside>
-      </div>
-    </main>
-  );
-};
-
-export default AdminProductsPage;
+        </article>)}</div>
+        {!filtered.length && <p className="py-10 text-center">No hay productos en esta selección. Prueba otros filtros o agrega una pieza.</p>}
+      </>}
+    </section>}
+    <Modal open={Boolean(pendingDelete)} onClose={() => { if (!busy) setPendingDelete(null); }} title="¿Eliminar este producto?">
+      <p>“{pendingDelete?.name}” se eliminará definitivamente. Si quieres retirarlo temporalmente, usa Ocultar.</p>
+      <div className="mt-6 flex flex-wrap gap-3"><button className="shop-button" disabled={busy} onClick={() => setPendingDelete(null)}>Cancelar</button><button className="shop-button admin-delete" disabled={busy} onClick={remove}>{busy ? 'Eliminando…' : 'Eliminar definitivamente'}</button></div>
+    </Modal>
+  </section>;
+}

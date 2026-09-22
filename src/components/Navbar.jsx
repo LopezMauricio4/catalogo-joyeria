@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu as MenuIcon, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
-import { buildWhatsAppLink } from '../utils/whatsappGenerator';
 
 const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -183,7 +182,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
                 to="/admin/productos"
                 className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
               >
-                Crear productos
+                Administrar
               </Link>
             )}
             <button
@@ -320,7 +319,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
               onClick={() => setIsOpen(false)}
               className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
             >
-              Crear productos
+              Administrar productos
             </Link>
           )}
 

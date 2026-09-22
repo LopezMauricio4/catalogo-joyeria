@@ -18,6 +18,7 @@ model Product {
   features    String[] @default([])
   stock       Int      @default(10)
   featured    Boolean  @default(false)
+  visible     Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

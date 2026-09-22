@@ -10,6 +10,7 @@ export type ProductRecord = {
   features: string[];
   stock: number;
   featured: boolean;
+  visible: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
