@@ -178,12 +178,20 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
           <div className="hidden items-center gap-3 lg:flex">
             {cartButton}
             {user?.role === "admin" && (
-              <Link
-                to="/admin/productos"
-                className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
-              >
-                Administrar
-              </Link>
+              <>
+                <Link
+                  to="/admin/productos"
+                  className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
+                >
+                  Administrar
+                </Link>
+                <Link
+                  to="/admin/inventario"
+                  className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
+                >
+                  Inventario
+                </Link>
+              </>
             )}
             <button
               type="button"
@@ -220,13 +228,22 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
             <p className="mt-1 truncate text-sm text-ink-muted">{user.email}</p>
             <div className="mt-5 flex flex-col gap-2">
               {user.role === "admin" && (
-                <Link
-                  to="/admin/productos"
-                  onClick={() => setIsAccountOpen(false)}
-                  className="rounded-xl border border-line px-4 py-3 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft"
-                >
-                  Panel admin
-                </Link>
+                <>
+                  <Link
+                    to="/admin/productos"
+                    onClick={() => setIsAccountOpen(false)}
+                    className="rounded-xl border border-line px-4 py-3 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft"
+                  >
+                    Panel admin
+                  </Link>
+                  <Link
+                    to="/admin/inventario"
+                    onClick={() => setIsAccountOpen(false)}
+                    className="rounded-xl border border-line px-4 py-3 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft"
+                  >
+                    Inventario
+                  </Link>
+                </>
               )}
               <button
                 type="button"

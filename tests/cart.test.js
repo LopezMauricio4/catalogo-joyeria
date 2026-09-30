@@ -9,13 +9,13 @@ test('el carrito recupera solo IDs y cantidades válidas sin confiar en precios 
   assert.deepEqual(parseCart('{}'), []);
   assert.deepEqual(parseCart(JSON.stringify([{ id: 'a', quantity: 2, price: 1 }, { id: 'a', quantity: 2 }, { id: 'b', quantity: -1 }, null, { id: 'c', quantity: 2.5 }])), [{ id: 'a', quantity: 2 }]);
 });
-test('detecta piezas eliminadas, agotadas y cantidades que superan el stock actualizado', () => {
+test('detecta piezas retiradas sin limitar el carrito por existencias', () => {
   const items = [{ id: 'a', quantity: 4 }, { id: 'missing', quantity: 1 }, { id: 'b', quantity: 1 }];
   const rows = resolveCart(items, products);
-  assert.ok(rows[0].issue);
+  assert.equal(rows[0].issue, '');
   assert.ok(rows[1].issue);
   assert.equal(rows[2].issue, '');
-  assert.ok(resolveCart([{ id: 'a', quantity: 1 }], [{ ...products[0], stock: 0 }])[0].issue);
+  assert.equal(resolveCart([{ id: 'a', quantity: 1 }], [{ ...products[0], stock: 0 }])[0].issue, '');
   assert.equal(stockLimit({ stock: null }), 99);
 });
 test('calcula subtotal con precios actuales y prepara todas las referencias para WhatsApp', () => {

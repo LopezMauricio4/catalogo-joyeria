@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "../hooks/useToast";
 import { mapSupabaseUser, signIn, signUp } from "../services/authApi";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { PRIVACY_CONSENT, PRIVACY_PATH } from '../data/legal';
 
 // useToast requiere <ToastProvider> envolviendo App.jsx.
 // Si aún no lo agregaste, esto no rompe la página, solo no muestra el toast.
@@ -25,6 +26,7 @@ const AuthPage = ({ onLogin, user }) => {
   const [notice, setNotice] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -42,11 +44,12 @@ const AuthPage = ({ onLogin, user }) => {
       if (!email || !form.password.trim()) throw new Error("Ingresa tu correo y contraseña.");
 
       if (mode === "register") {
+        if (!privacyAccepted) throw new Error('Autoriza el tratamiento de datos para crear tu cuenta.');
         if (!form.name.trim()) throw new Error("Ingresa tu nombre completo.");
         if (form.password.length < 8) throw new Error("La contraseña debe tener al menos 8 caracteres.");
         if (form.password !== form.confirmPassword) throw new Error("Las contraseñas no coinciden.");
 
-        const { session, user: registeredUser } = await signUp(form.name.trim(), email, form.password);
+        const { session, user: registeredUser } = await signUp(form.name.trim(), email, form.password, privacyAccepted);
         if (!session) {
           setNotice("Revisa tu correo para confirmar la cuenta antes de iniciar sesión.");
           showToast("Revisa tu correo para confirmar la cuenta.", "success");
@@ -120,7 +123,7 @@ const AuthPage = ({ onLogin, user }) => {
             <p className="mt-4 text-base leading-7 text-ink-muted">
               {mode === "login"
                 ? "Consulta piezas, guarda tu experiencia y accede a tu perfil de cliente."
-                : "Regístrate para comprar o consultar piezas y para acceder a tu perfil de cliente."}
+                : "Crear una cuenta es opcional. Puedes consultar el catálogo y comprar por WhatsApp sin registrarte."}
             </p>
           </div>
 
@@ -188,6 +191,7 @@ const AuthPage = ({ onLogin, user }) => {
               </label>
             )}
 
+            {mode === 'register' && <label className="privacy-consent"><input required type="checkbox" checked={privacyAccepted} onChange={event => setPrivacyAccepted(event.target.checked)} /><span>{PRIVACY_CONSENT} <Link to={PRIVACY_PATH} target="_blank" rel="noopener noreferrer">Leer política de datos</Link>.</span></label>}
             {error && (
               <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
             )}

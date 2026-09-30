@@ -31,7 +31,7 @@ const heroImage =
 
 const CategoryCard = ({ category, products }) => {
   const availableProducts = products.filter(
-    (product) => product.category === category.key && (product.stock === undefined || product.stock === null || Number(product.stock) > 0),
+    (product) => product.category === category.key,
   );
   const [activeIndex, setActiveIndex] = useState(0);
 

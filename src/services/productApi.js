@@ -36,7 +36,6 @@ const normalizeProduct = (product) => {
     images: normalizedImages.length > 0 ? normalizedImages : [primaryImage],
     description: product.description ?? product.descripcion ?? '',
     features: rawFeatures.map((feature) => String(feature).trim()).filter(Boolean),
-    stock: product.stock == null ? null : Number(product.stock),
     featured: Boolean(product.featured ?? product.destacado),
     visible: product.visible !== false,
     createdAt: product.createdAt,

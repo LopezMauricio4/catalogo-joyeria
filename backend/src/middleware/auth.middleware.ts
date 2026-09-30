@@ -4,7 +4,7 @@ import { getSupabase } from '../lib/supabase.js';
 declare global {
   namespace Express {
     interface Request {
-      user?: { sub: string; role: 'ADMIN' | 'CLIENT' };
+      user?: { sub: string; role: 'ADMIN' | 'CLIENT'; name: string };
     }
   }
 }
@@ -20,6 +20,7 @@ export const createRequireAuth = (getClient = getSupabase) =>
       }
       req.user = {
         sub: data.user.id,
+        name: String(data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email || data.user.id).slice(0, 200),
         role: data.user.app_metadata?.role === 'admin' ? 'ADMIN' : 'CLIENT',
       };
       return next();

@@ -6,23 +6,26 @@ import JewelryCard from '../components/JewelryCard';
 import ProductImage from '../components/ProductImage';
 import Modal from '../components/Modal';
 import useDocumentMeta from '../hooks/useDocumentMeta';
-import { formatPrice, isSoldOut, materialNames } from '../utils/catalog';
+import { formatPrice, materialNames } from '../utils/catalog';
 import { buildWhatsAppLink, generateProductMessage } from '../utils/whatsappGenerator';
 import { stockLimit } from '../utils/cart';
+import { readProductDisclosure } from '../utils/productDisclosure';
+import { PRIVACY_PATH } from '../data/legal';
 
 function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
+  const disclosure = readProductDisclosure(product.features);
   const [selected, setSelected] = useState(0);
   const [zoom, setZoom] = useState(false);
   const touch = useRef(null);
   const images = [...new Set([product.image, ...(product.images || [])].filter(Boolean))];
   const index = Math.min(selected, Math.max(0, images.length - 1));
-  const soldOut = isSoldOut(product);
+
   const whatsappLink = buildWhatsAppLink(generateProductMessage(product, window.location.origin));
   const move = direction => setSelected(current => (current + direction + images.length) % images.length);
-  const label = soldOut ? 'Consultar alternativas' : 'Pedir';
+  const label = 'Pedir';
   const quantityInCart = cart.items.find(item => item.id === String(product.id))?.quantity || 0;
   const atLimit = quantityInCart >= stockLimit(product);
-  const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{!soldOut && <button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
+  const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{<button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
   return <div className="product-page shop-shell">
     <Link className="product-back" to={catalogReturn}><ArrowLeft size={17} />Volver a las piezas</Link>
     <section className="product-layout" aria-label={product.name}>
@@ -35,14 +38,17 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
           touch.current = null;
         }}>
           <button type="button" className="product-zoom-trigger" onClick={() => setZoom(true)} aria-label={`Ampliar imagen de ${product.name}`}><ProductImage src={images[index]} alt={product.name} eager /><span className="product-zoom-hint" aria-hidden="true"><ZoomIn size={20} /></span></button>
-          {soldOut && <span className="product-stock-badge">Agotada por ahora</span>}
+
         </div>
         {images.length > 1 && <div className="product-gallery-thumbnails" role="group" aria-label="Imágenes de la pieza">{images.map((image, position) => <button key={image} type="button" aria-label={`Ver imagen ${position + 1} de ${images.length}`} aria-pressed={index === position} onClick={() => setSelected(position)}><ProductImage src={image} alt={`${product.name}, vista ${position + 1}`} /></button>)}</div>}
         <span className="sr-only" aria-live="polite">Imagen {index + 1} de {images.length || 1}</span>
       </div>
-      <div className="product-story"><p className="shop-eyebrow">{materialNames[product.material] || product.material}</p><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p><span className={`product-availability ${soldOut ? 'is-sold-out' : ''}`}><i />{soldOut ? 'Agotada' : Number(product.stock) > 0 ? 'Disponible' : 'Consultar disponibilidad'}</span></div>
+      <div className="product-story"><p className="shop-eyebrow">{materialNames[product.material] || product.material}</p><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p></div>
         <p className="product-description">{product.description || 'Conoce todos los detalles de esta pieza con nuestra asesoría personalizada.'}</p>
-        <div className="product-purchase">{purchaseActions}{quantityInCart > 0 && <Link to="/carrito" className="product-cart-feedback">{quantityInCart} en tu carrito · Ver pedido <ArrowRight size={15} /></Link>}<p>{soldOut ? 'Pregúntanos por su regreso o por una pieza similar.' : 'Pide esta joya por WhatsApp o reúne varias en tu carrito.'}</p><span>No necesitas crear una cuenta.</span></div>
+        <dl className="product-disclosure"><div><dt>Material</dt><dd>{disclosure.composition || materialNames[product.material] || product.material}</dd></div><div><dt>Medidas y tallas</dt><dd>{disclosure.measurements || 'Solicita las medidas de esta pieza antes de confirmar tu compra.'}</dd></div></dl>
+        <p className="product-legal-note">Precio de la pieza en COP, incluidos los impuestos aplicables. El envío se informa por separado y se acuerda el total antes de confirmar la compra por WhatsApp.</p>
+        <p className="product-legal-links"><Link to="/garantias-y-cambios">Garantías y cambios</Link> · <Link to={PRIVACY_PATH}>Tratamiento de datos</Link></p>
+        <div className="product-purchase">{purchaseActions}{quantityInCart > 0 && <Link to="/carrito" className="product-cart-feedback">{quantityInCart} en tu carrito · Ver pedido <ArrowRight size={15} /></Link>}<p>Pide esta joya por WhatsApp o reúne varias en tu carrito.</p><span>No necesitas crear una cuenta.</span></div>
         <details className="product-details" open><summary>Detalles que la hacen especial</summary><ul>{(product.features?.length ? product.features : [materialNames[product.material] || product.material]).map((feature, position) => <li key={`${feature}-${position}`}><Check size={16} /><span>{feature}</span></li>)}</ul></details>
         <details className="product-details"><summary>¿Cómo comprar tu joya?</summary><ol><li>Elige «Pedir» para consultar esta pieza o agrega varias al carrito y continúa por WhatsApp.</li><li>Confirmamos contigo disponibilidad, medidas y opciones de entrega.</li><li>Acordamos los detalles de pago y envío directamente contigo.</li></ol></details>
         <p className="product-reference">Referencia: {product.id}</p>

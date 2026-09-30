@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Loader2, Pencil, Plus, Save, Star } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Plus, Save, Star, X, ZoomIn } from "lucide-react";
 import { useToast } from "../hooks/useToast";
 import { categories, materialLabels } from "../data/mockProducts";
 import ProductImage from '../components/ProductImage';
+import Modal from '../components/Modal';
+import { disclosureFeatures, readProductDisclosure } from '../utils/productDisclosure';
+
 
 const emptyProduct = {
   id: "",
@@ -10,26 +13,38 @@ const emptyProduct = {
   material: "oro-18k",
   category: "anillos",
   price: "",
-  stock: "10",
   featured: false,
   image: "",
   description: "",
   features: "",
+  composition: '',
+  measurements: '',
 };
 
-const ImagePreview = ({ file, index }) => {
+const ImagePreview = ({ file, index, onRemove }) => {
   const ref = useRef(null);
+  const [preview, setPreview] = useState('');
   useEffect(() => {
     const url = URL.createObjectURL(file);
     ref.current.src = url;
     return () => URL.revokeObjectURL(url);
   }, [file]);
-  return <img ref={ref} alt={`Vista previa ${index + 1}`} className="h-16 w-16 rounded-xl border border-line object-cover" />;
+  return <div className="editor-image-tile">
+    <button type="button" className="editor-image-open" onClick={() => setPreview(ref.current.src)} aria-label={`Ampliar imagen ${index + 1}: ${file.name}`}>
+      <img ref={ref} alt={file.name} /><span aria-hidden="true"><ZoomIn size={16} /></span>
+    </button>
+    <button type="button" className="editor-image-remove" onClick={onRemove} aria-label={`Quitar imagen ${index + 1}: ${file.name}`}><X size={16} /></button>
+    <p title={file.name}>{file.name}</p>
+    <Modal open={Boolean(preview)} onClose={() => setPreview('')} title="Vista previa de la imagen" className="editor-image-dialog">
+      <img src={preview || undefined} alt={file.name} className="editor-image-expanded" />
+      <p className="mt-3 break-all text-sm text-ink-muted">{file.name}</p>
+    </Modal>
+  </div>;
 };
 
 const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   const { showToast } = useToast();
-  const [form, setForm] = useState(product ? { ...product, price: String(product.price), stock: String(product.stock ?? 0), features: product.features.join(", ") } : emptyProduct);
+  const [form, setForm] = useState(product ? { ...product, price: String(product.price), ...readProductDisclosure(product.features) } : emptyProduct);
   const editingId = product?.id;
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -41,8 +56,15 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files || []);
-    if (files.length > 5) { setFormError("Selecciona como máximo 5 imágenes."); event.target.value = ""; setSelectedFiles([]); return; }
-    setFormError(""); setSelectedFiles(files);
+    // El estado es la selección definitiva que se envía; permite volver a elegir una foto quitada.
+    event.target.value = '';
+    if (!files.length) return;
+    const newFiles = files.filter(file => !selectedFiles.some(existing => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified));
+    if (selectedFiles.length + newFiles.length > 5) { setFormError("Puedes subir hasta 5 imágenes. Quita alguna antes de agregar más."); return; }
+    if (newFiles.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setFormError('Usa imágenes JPG, PNG, WEBP o AVIF de máximo 5 MB cada una.'); return;
+    }
+    setFormError(""); setSelectedFiles(current => [...current, ...newFiles]);
   };
 
   const handleSubmit = async (event) => {
@@ -52,17 +74,13 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
 
     const trimmedName = form.name.trim();
     const trimmedDescription = form.description.trim();
-    const stockValue = Number(form.stock);
 
     if (!trimmedName || !trimmedDescription || (!Number.isFinite(Number(form.price)) || Number(form.price) <= 0)) {
       setFormError("Completa nombre, descripción y un precio válido antes de guardar.");
       return;
     }
+    if (!form.composition.trim() || !form.measurements.trim()) { setFormError('Completa la composición y las medidas de la pieza.'); return; }
 
-    if (!Number.isSafeInteger(stockValue) || stockValue < 0) {
-      setFormError("El stock debe ser un número igual o mayor a 0.");
-      return;
-    }
 
     const productPayload = new FormData();
     productPayload.append("name", trimmedName);
@@ -70,12 +88,9 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
     productPayload.append("price", String(Number(form.price)));
     productPayload.append("material", form.material);
     productPayload.append("category", form.category);
-    // Antes esto iba fijo en "10" y "false" incluso al editar — se perdía el
-    // stock real y el estado de "destacado" de cada producto cada vez que se
-    // guardaba una edición. Ahora se manda lo que realmente hay en el formulario.
-    productPayload.append("stock", String(stockValue));
+
     productPayload.append("featured", String(form.featured));
-    productPayload.append("features", form.features || "");
+    disclosureFeatures(form).forEach(feature => productPayload.append('features', feature));
 
     if (form.image && form.image.trim()) {
       productPayload.append("image", form.image.trim());
@@ -99,7 +114,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   };
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <main className="product-editor-page mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="luxury-eyebrow">Administrador</p>
@@ -113,21 +128,20 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
         </button>
       </div>
 
-      <div className="mx-auto max-w-3xl">
-        <section className="rounded-card-lg border border-line bg-ivory-soft/90 p-6 shadow-[0_20px_45px_rgba(11,37,27,0.04)] md:p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-sage text-ink-soft">
+      <div className="mx-auto max-w-4xl">
+        <section className="product-editor-card">
+          <div className="product-editor-card-heading">
+            <div className="product-editor-icon">
               {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             </div>
-            <h2 className="text-3xl font-medium text-ink">
-              {editingId ? "Editar producto" : "Nuevo producto"}
-            </h2>
+            <div><p className="luxury-eyebrow">Ficha de producto</p><h2>{editingId ? "Editar producto" : "Nuevo producto"}</h2></div>
           </div>
 
-          {editingId && <p className="mb-5 text-sm">{product.visible ? "Visible en el catálogo." : "Oculto: guardar cambios no lo publicará."} Si no eliges nuevas fotos, se conserva la galería actual.</p>}
+          {editingId && <p className="product-editor-note">{product.visible ? "Visible en el catálogo." : "Oculto: guardar cambios no lo publicará."}</p>}
           <form onSubmit={handleSubmit}><fieldset disabled={isSaving} className="space-y-5">
+            <div className="product-editor-section"><div className="product-editor-section-title"><span>01</span><div><h3>Información básica</h3></div></div>
             <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
+              <label className="product-editor-field">
                 Nombre
                 <input
                   name="name"
@@ -138,22 +152,13 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 />
               </label>
 
-              <label className="block text-sm text-ink-muted">
-              Precio (COP)
-                <input
-                  name="price"
-                  type="number"
-                  min="1"
-                  value={form.price}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                  placeholder="4200"
-                />
-              </label>
+
+            </div>
             </div>
 
+            <div className="product-editor-section"><div className="product-editor-section-title"><span>02</span><div><h3>Clasificación</h3></div></div>
             <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
+              <label className="product-editor-field">
                 Categoría
                 <select
                   name="category"
@@ -169,7 +174,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 </select>
               </label>
 
-              <label className="block text-sm text-ink-muted">
+              <label className="product-editor-field">
                 Material
                 <select
                   name="material"
@@ -183,22 +188,14 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
               </label>
             </div>
 
-            {/* Stock real — antes se mandaba "10" fijo sin importar lo que hubiera */}
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="block text-sm text-ink-muted">
-                Stock disponible
-                <input
-                  name="stock"
-                  type="number"
-                  min="0"
-                  value={form.stock}
-                  onChange={handleChange}
-                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                  placeholder="10"
-                />
-              </label>
 
-              <label className="mt-2 flex items-center gap-3 self-end rounded-2xl border border-line bg-ivory-soft px-4 py-3.5 text-sm text-ink-soft">
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="product-editor-field">Composición y materiales<input required name="composition" value={form.composition} onChange={handleChange} placeholder="Indica composición real, recubrimiento y otros materiales" /></label>
+              <label className="product-editor-field">Medidas y tallas<input required name="measurements" value={form.measurements} onChange={handleChange} placeholder="Ej. longitud 18 cm, grosor 3 mm" /></label>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+
+              <label className="product-editor-featured mt-2 flex items-center gap-3 self-end rounded-2xl border border-line bg-ivory-soft px-4 py-3.5 text-sm text-ink-soft">
                 <input
                   name="featured"
                   type="checkbox"
@@ -212,8 +209,25 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 </span>
               </label>
             </div>
+            </div>
 
-            <label className="block text-sm text-ink-muted">
+            <section className="product-editor-section"><div className="product-editor-section-title"><span>03</span><div><h3>Precio</h3></div></div>
+<div className="product-final-price">              <label className="product-editor-field">
+              Precio final de la pieza (COP, impuestos incluidos)
+                <input
+                  required name="price"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.price}
+                  onChange={handleChange}
+                  className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
+                  placeholder="4200"
+                />
+              </label></div>
+</section>
+            <div className="product-editor-section"><div className="product-editor-section-title"><span>04</span><div><h3>Imágenes</h3></div></div>
+            <label className="product-editor-field">
               Imagen (URL opcional)
               <input
                 name="image"
@@ -224,28 +238,31 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
               />
             </label>
 
-            <label className="block text-sm text-ink-muted">
+            <label className="product-editor-field">
               Imágenes del producto (máximo 5)
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/avif"
                 multiple
                 onChange={handleFileChange}
-                className="mt-2 block w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-sm text-ink-soft outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-sage file:px-3 file:py-2 file:text-[9px] file:font-medium file:uppercase file:tracking-[0.18em] file:text-ink-soft focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
+                className="product-editor-file-input mt-2 block w-full"
               />
+            </label>
               {selectedFiles.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="editor-image-selection" aria-label="Imágenes seleccionadas para subir">
                   {selectedFiles.map((file, index) => (
-                    <ImagePreview key={`${file.name}-${index}`} file={file} index={index} />
+                    <ImagePreview key={`${file.name}-${file.size}-${file.lastModified}`} file={file} index={index} onRemove={() => { setSelectedFiles(current => current.filter(item => item !== file)); setFormError(''); }} />
                   ))}
                 </div>
               )}
-            </label>
+            <p className="text-sm text-ink-muted" role="status">{selectedFiles.length}/5 imágenes seleccionadas.</p>
 
             {editingId && selectedFiles.length === 0 && <div className="flex flex-wrap gap-2" aria-label="Imágenes actuales">{product.images.map((src, index) => <ProductImage key={`${src}-${index}`} src={src} alt={`Imagen actual ${index + 1}`} className="h-16 w-16 rounded-xl object-cover" />)}</div>}
-            <p className="text-sm text-ink-muted">Los archivos nuevos reemplazan la galería. Si hay una URL indicada, también se incluye como imagen.</p>
+            <p className="text-sm text-ink-muted">Las fotos nuevas reemplazan la galería actual.</p>
+            </div>
 
-            <label className="block text-sm text-ink-muted">
+            <div className="product-editor-section"><div className="product-editor-section-title"><span>05</span><div><h3>Descripción y características</h3></div></div>
+            <label className="product-editor-field">
               Descripción
               <textarea
                 name="description"
@@ -257,7 +274,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
               />
             </label>
 
-            <label className="block text-sm text-ink-muted">
+            <label className="product-editor-field">
               Características
               <textarea
                 name="features"
@@ -268,14 +285,15 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 placeholder="18 kilates, Acabado brillante, Diseño atemporal"
               />
             </label>
+            </div>
 
             {formError && (
-              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p role="alert" className="product-editor-error">
                 {formError}
               </p>
             )}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="product-editor-actions">
               <button
                 type="submit"
                 disabled={isSaving}
@@ -292,10 +310,10 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
           </fieldset></form>
         </section>
 
-
       </div>
     </main>
   );
 };
 
 export default ProductEditor;
+

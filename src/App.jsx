@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -15,6 +15,10 @@ import { useToast } from "./hooks/useToast";
 import useCart from './hooks/useCart';
 import Cart from './pages/Cart';
 import GuaranteesPage from "./pages/GuaranteesPage";
+import InventoryPage from "./pages/InventoryPage";
+import SalesPage from "./pages/SalesPage";
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 
 function RouteScroll() {
   const location = useLocation();
@@ -47,18 +51,32 @@ function RouteScroll() {
   return null;
 }
 
+function CatalogRefresh({ refresh }) {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (!['/', '/catalogo', '/carrito'].includes(pathname) && !pathname.startsWith('/producto/')) return;
+    let active = true;
+    const update = () => { if (active && document.visibilityState === 'visible') refresh().catch(() => {}); };
+    update();
+
+    window.addEventListener('focus', update);
+    return () => { active = false; window.removeEventListener('focus', update); };
+  }, [pathname, refresh]);
+  return null;
+}
+
 function App() {
   const [products, setProducts] = useState([]);
+  const [productsError, setProductsError] = useState("");
   const cart = useCart(products);
-  const refreshProducts = async () => {
+  const refreshProducts = useCallback(async () => {
     const fresh = await fetchProducts();
     setProducts(fresh);
     setProductsError('');
     return fresh;
-  };
+  }, []);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [productsError, setProductsError] = useState("");
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [user, setUser] = useState({ role: "guest", userName: "" });
   const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
@@ -113,6 +131,7 @@ function App() {
   return (
     <Router>
       <RouteScroll />
+      <CatalogRefresh refresh={refreshProducts} />
       <div className="min-h-screen bg-ivory text-[#18342d] antialiased">
         <Navbar user={user} onLogout={handleLogout} searchOpen={searchOpen} setSearchOpen={setSearchOpen} cartCount={cart.count} />
         {productsError && <div role="alert" className="catalog-load-error"><p>No pudimos cargar el catálogo. Comprueba tu conexión e inténtalo de nuevo.</p><button type="button" onClick={() => { setProductsError(''); setIsLoadingProducts(true); setLoadAttempt(value => value + 1); }}>Reintentar</button></div>}
@@ -123,10 +142,14 @@ function App() {
             <Route path="/producto/:id" element={isLoadingProducts ? <p className="p-8" role="status">Cargando producto…</p> : <ProductDetail products={products} error={productsError} cart={cart} />} />
             <Route path="/carrito" element={<Cart cart={cart} products={products} isLoading={isLoadingProducts} error={productsError} refreshProducts={refreshProducts} />} />
             <Route path="/garantias-y-cambios" element={<GuaranteesPage />} />
+            <Route path="/politica-de-datos" element={<PrivacyPage />} />
+            <Route path="/terminos-y-condiciones" element={<TermsPage />} />
             <Route path="/auth" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : <AuthPage onLogin={setUser} user={user} />} />
             <Route path="/admin/productos" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : user.role === "admin" ? (
               <AdminProductsPage onSaveProduct={handleSaveProduct} onDeleteProduct={handleDeleteProduct} onVisibilityChange={handleVisibility} />
             ) : <Navigate to="/auth" replace />} />
+            <Route path="/admin/inventario" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : user.role === "admin" ? <InventoryPage /> : <Navigate to="/auth" replace />} />
+            <Route path="/admin/ventas" element={authLoading ? <p className="p-8" role="status">Comprobando sesión…</p> : user.role === "admin" ? <SalesPage /> : <Navigate to="/auth" replace />} />
           </Routes>
         </main>
         <Footer />

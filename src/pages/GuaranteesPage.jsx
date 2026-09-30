@@ -80,9 +80,10 @@ const GuaranteesPage = () => (
         <p className="luxury-eyebrow">03 · Condiciones generales</p>
         <h2 className="mt-3 text-3xl font-light text-ink">Cambios y validación</h2>
         <p className="mt-4 border-l-2 border-gold-400 pl-4 text-sm leading-7 text-ink-muted">
-          Para hacer efectiva cualquier garantía o cambio, es indispensable presentar el comprobante de compra o número de pedido.
+          Para solicitar una garantía o cambio, contáctanos con el número de pedido, comprobante u otro medio que permita acreditar la compra.
           El producto será evaluado por nuestro equipo para verificar que cumple con las condiciones descritas.
         </p>
+        <p className="mt-4 text-sm leading-7 text-ink-muted">Estas condiciones no limitan la garantía legal ni los derechos de retracto o reversión del pago cuando sean aplicables según la legislación colombiana. Antes de confirmar una compra por WhatsApp se informarán las condiciones de entrega y los derechos aplicables al pedido.</p>
       </section>
     </div>
   </main>

@@ -12,14 +12,14 @@ const filters = query => readCatalogFilters(new URLSearchParams(query));
 test('material, categoría, búsqueda y precio se combinan sin alterar los productos', () => {
   const original = JSON.stringify(products);
   assert.deepEqual(filterProducts(products, filters('material=oro-18k&categoria=anillos&q=orbita&min=100000&max=150000')).map(p => p.id), ['a']);
-  assert.deepEqual(filterProducts(products, filters('material=laminado&categoria=anillos&disponible=1')), []);
+  assert.deepEqual(filterProducts(products, filters('material=laminado&categoria=anillos&disponible=1')).map(p => p.id), ['b']);
   assert.equal(JSON.stringify(products), original);
 });
-test('orden por fecha y precio; destacados disponibles antes que agotados', () => {
+test('orden por fecha, precio y destacados independiente del stock', () => {
   assert.deepEqual(filterProducts(products, filters('orden=newest')).map(p => p.id), ['c', 'b', 'a']);
   assert.deepEqual(filterProducts(products, filters('orden=price-asc')).map(p => p.id), ['b', 'c', 'a']);
   assert.deepEqual(filterProducts(products, filters('orden=price-desc')).map(p => p.id), ['a', 'c', 'b']);
-  assert.deepEqual(filterProducts(products, filters('')).map(p => p.id), ['c', 'a', 'b']);
+  assert.deepEqual(filterProducts(products, filters('')).map(p => p.id), ['b', 'c', 'a']);
 });
 test('rango invertido o inválido produce un mensaje; cero y límite vacío son válidos', () => {
   assert.ok(validatePriceRange('100', '50'));
@@ -45,10 +45,10 @@ test('WhatsApp identifica pieza, material, precio COP y enlace, sin confirmar un
   assert.match(message, /https:\/\/ejemplo.com\/producto\/a/);
   assert.match(message, /confirmas disponibilidad/);
 });
-test('agotados preguntan por reposición y material laminado usa su nombre completo', () => {
+test('el stock antiguo no marca agotados en WhatsApp', () => {
   const message = generateProductMessage(products[1]);
   assert.match(message, /Oro laminado 18k/);
-  assert.match(message, /agotada/);
-  assert.match(message, /pieza similar/);
+  assert.doesNotMatch(message, /agotada/);
+  assert.match(message, /confirmas disponibilidad/);
   assert.equal(formatPrice(undefined), 'Consultar precio');
 });

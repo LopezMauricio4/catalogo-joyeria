@@ -13,19 +13,15 @@ export function parseCart(raw) {
   } catch { return []; }
 }
 
-export function stockLimit(product) {
-  if (!product) return 0;
-  if (product.stock == null || !Number.isFinite(Number(product.stock))) return 99;
-  return Math.max(0, Math.min(99, Math.floor(Number(product.stock))));
-}
+export function stockLimit(product) { return product ? 99 : 0; }
 
 export function resolveCart(items, products) {
   return items.map(item => {
     const product = products.find(product => String(product.id) === item.id);
     const limit = stockLimit(product);
     const issue = !product ? 'Esta pieza ya no está disponible en el catálogo.'
-      : limit === 0 ? 'Esta pieza está agotada. Retírala para continuar.'
-        : item.quantity > limit ? `Solo hay ${limit} disponibles. Ajusta la cantidad.` : '';
+
+        : item.quantity > limit ? `El límite por pieza en el carrito es ${limit}.` : '';
     return { ...item, product, limit, issue };
   });
 }

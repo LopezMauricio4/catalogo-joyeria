@@ -18,10 +18,10 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
   const [params, setParams] = useSearchParams();
   const filters = readCatalogFilters(params);
   const [showFilters, setShowFilters] = useState(false);
-  const [draft, setDraft] = useState({ min: '', max: '', available: false });
+  const [draft, setDraft] = useState({ min: '', max: '' });
   const [draftError, setDraftError] = useState('');
   const filtered = useMemo(() => filterProducts(products, readCatalogFilters(params)), [products, params]);
-  const advancedCount = Number(filters.available) + Number(Boolean(filters.min || filters.max));
+  const advancedCount = Number(Boolean(filters.min || filters.max));
   const hasFilters = Boolean(filters.material || filters.category || filters.search || advancedCount);
   const rangeError = validatePriceRange(filters.min, filters.max);
   const update = (changes, replace = false) => setParams(current => {
@@ -30,12 +30,12 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
     return next;
   }, { replace });
   const reset = () => setParams({});
-  const openFilters = () => { setDraft({ min: filters.min, max: filters.max, available: filters.available }); setDraftError(''); setShowFilters(true); };
+  const openFilters = () => { setDraft({ min: filters.min, max: filters.max }); setDraftError(''); setShowFilters(true); };
   const applyFilters = event => {
     event.preventDefault();
     const message = validatePriceRange(draft.min, draft.max);
     if (message) { setDraftError(message); return; }
-    update({ min: draft.min, max: draft.max, disponible: draft.available ? '1' : '' });
+    update({ min: draft.min, max: draft.max, disponible: '' });
     setShowFilters(false);
   };
   return (
@@ -65,7 +65,6 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
           {filters.material && <button onClick={() => update({ material: '' })}>{materialNames[filters.material] || filters.material}<X size={13} /><span className="sr-only">Quitar material</span></button>}
           {filters.category && <button onClick={() => update({ categoria: '' })}>{categories.find(item => item.key === filters.category)?.label || filters.category}<X size={13} /><span className="sr-only">Quitar categoría</span></button>}
           {(filters.min || filters.max) && <button onClick={() => update({ min: '', max: '' })}>{rangeError ? 'Revisar precio' : `${filters.min ? formatPrice(filters.min) : '$0'} – ${filters.max ? formatPrice(filters.max) : 'sin límite'}`}<X size={13} /><span className="sr-only">Quitar precio</span></button>}
-          {filters.available && <button onClick={() => update({ disponible: '' })}>Disponibles<X size={13} /><span className="sr-only">Quitar disponibilidad</span></button>}
           <button className="catalog-reset" onClick={reset}>Limpiar todo</button>
         </div>}
         {rangeError && <p role="alert" className="shop-form-error">{rangeError} Abre Filtros para corregirlo.</p>}
@@ -76,7 +75,7 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
       <aside className="catalog-concierge"><div className="concierge-icon"><WhatsAppIcon size={24} strokeWidth={1.3} /></div><div><p className="shop-eyebrow">UNA ELECCIÓN PERSONAL</p><h2>¿Te ayudamos a elegir?</h2><p>Cuéntanos qué buscas. Te acompañamos a encontrar la pieza y coordinamos tu compra por WhatsApp.</p></div><a className="shop-button shop-button-light" href={buildWhatsAppLink('Hola, Alpez. Quiero ayuda para elegir una joya.')} target="_blank" rel="noopener noreferrer">Conversemos <ArrowRight size={17} /></a></aside>
 
       <Modal open={showFilters} onClose={() => setShowFilters(false)} title="Encuentra tu pieza">
-        <form onSubmit={applyFilters} className="catalog-filter-form"><p>Afina tu búsqueda por precio y disponibilidad.</p><fieldset><legend>Tu presupuesto · COP</legend><div className="catalog-price-inputs"><label>Desde<input type="number" min="0" step="any" inputMode="decimal" placeholder="0" value={draft.min} onChange={event => { setDraft(current => ({ ...current, min: event.target.value })); setDraftError(''); }} /></label><label>Hasta<input type="number" min="0" step="any" inputMode="decimal" placeholder="Sin límite" value={draft.max} onChange={event => { setDraft(current => ({ ...current, max: event.target.value })); setDraftError(''); }} /></label></div></fieldset><label className="catalog-available"><input type="checkbox" checked={draft.available} onChange={event => setDraft(current => ({ ...current, available: event.target.checked }))} /><span>Solo piezas disponibles</span></label>{draftError && <p className="shop-form-error" role="alert">{draftError}</p>}<div className="catalog-filter-footer"><button type="button" className="shop-text-link" onClick={() => { setDraft({ min: '', max: '', available: false }); setDraftError(''); }}>Restablecer</button><button type="submit" className="shop-button">Aplicar filtros <ArrowRight size={16} /></button></div></form>
+        <form onSubmit={applyFilters} className="catalog-filter-form"><p>Afina tu búsqueda por precio.</p><fieldset><legend>Tu presupuesto · COP</legend><div className="catalog-price-inputs"><label>Desde<input type="number" min="0" step="any" inputMode="decimal" placeholder="0" value={draft.min} onChange={event => { setDraft(current => ({ ...current, min: event.target.value })); setDraftError(''); }} /></label><label>Hasta<input type="number" min="0" step="any" inputMode="decimal" placeholder="Sin límite" value={draft.max} onChange={event => { setDraft(current => ({ ...current, max: event.target.value })); setDraftError(''); }} /></label></div></fieldset>{draftError && <p className="shop-form-error" role="alert">{draftError}</p>}<div className="catalog-filter-footer"><button type="button" className="shop-text-link" onClick={() => { setDraft({ min: '', max: '' }); setDraftError(''); }}>Restablecer</button><button type="submit" className="shop-button">Aplicar filtros <ArrowRight size={16} /></button></div></form>
       </Modal>
     </div>
   );

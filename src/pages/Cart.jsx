@@ -54,7 +54,8 @@ export default function Cart({ cart, products, isLoading, error, refreshProducts
             <button type="button" className="shop-text-link" disabled={checking} onClick={() => setConfirmClear(true)}>Vaciar carrito</button>
           </section><aside className="cart-summary"><h2>Tu pedido</h2><p>{cart.count} {cart.count === 1 ? 'joya seleccionada' : 'joyas seleccionadas'}</p><div className="cart-subtotal"><span>Subtotal estimado</span><strong>{cartSubtotal(rows) > 0 ? formatPrice(cartSubtotal(rows)) : 'Por confirmar'}</strong></div>
             {rows.some(row => row.product && !(row.product.price > 0)) && <p>Hay piezas con precio por confirmar que no se incluyen en el subtotal.</p>}
-            <p>Confirmamos disponibilidad, pago y envío contigo por WhatsApp. Agregar piezas no las reserva.</p>
+            <p>Los precios de las piezas incluyen los impuestos aplicables. El envío se cotiza por separado; confirmamos el total, pago y entrega por WhatsApp antes de cerrar la compra. Agregar piezas no las reserva.</p>
+            <p><Link to="/politica-de-datos" className="underline">Política de Tratamiento de Datos Personales</Link></p>
             {verified ? <a className="shop-button" href={buildWhatsAppLink(generateCartMessage(rows, window.location.origin))} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />Abrir WhatsApp con mi pedido</a>
               : <button className="shop-button" type="button" disabled={checking} onClick={verify}><WhatsAppIcon size={19} />{checking ? 'Verificando piezas…' : 'Continuar por WhatsApp'}</button>}
             {notice && <p role="status" className="cart-notice">{notice}</p>}

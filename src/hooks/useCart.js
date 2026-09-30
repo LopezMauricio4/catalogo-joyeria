@@ -19,7 +19,7 @@ export default function useCart(products) {
     const id = String(product.id);
     const quantity = items.find(item => item.id === id)?.quantity || 0;
     if (quantity >= stockLimit(product)) {
-      showToast('Ya tienes en el carrito la cantidad disponible de esta pieza.', 'error');
+      showToast('El límite por pieza en el carrito es de 99 unidades.', 'error');
       return;
     }
     setItems(current => {

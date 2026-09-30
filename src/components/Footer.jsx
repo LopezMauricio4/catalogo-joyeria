@@ -1,6 +1,8 @@
 import SocialIcon from './SocialIcon';
 import ShopNavLink from './ShopNavLink';
-import { useMatch } from 'react-router-dom';
+import { Link, useMatch } from 'react-router-dom';
+import { business, PRIVACY_PATH, SIC_URL } from '../data/legal';
+import { buildWhatsAppLink } from '../utils/whatsappGenerator';
 
 const navLinks = [
   { to: "/", label: "Inicio" },
@@ -74,6 +76,19 @@ const Footer = () => {
         </div>
 
 
+        <div className="footer-contact">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-400">Contacto e información legal</p>
+          <p>Responsables:</p>
+          {business.responsiblePeople.map(person => <p key={person.identification}>{person.name} · {person.identification}</p>)}
+          {business.nit && <p>NIT: {business.nit}</p>}
+          {business.address && <p>Dirección de notificaciones: {business.address}</p>}
+          {business.email && <a href={`mailto:${business.email}`}>{business.email}</a>}
+          <a href={buildWhatsAppLink('Hola. Quisiera atención sobre una compra o solicitud.')} target="_blank" rel="noopener noreferrer">WhatsApp: {business.phone}</a>
+          <Link to={PRIVACY_PATH}>Política de Tratamiento de Datos Personales</Link>
+          <Link to="/terminos-y-condiciones">Términos y Condiciones</Link>
+          <Link to="/garantias-y-cambios">Garantías y cambios</Link>
+          <a href={SIC_URL} target="_blank" rel="noopener noreferrer">Protección al consumidor — SIC</a>
+        </div>
       </div>
 
       {/* Franja legal */}

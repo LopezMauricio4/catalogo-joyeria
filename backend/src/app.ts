@@ -2,6 +2,8 @@ import 'dotenv/config';
 import cors from 'cors';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import productRoutes from './modules/products/product.routes.js';
+import inventoryRoutes from './modules/inventory/inventory.routes.js';
+import salesRoutes from './modules/sales/sales.routes.js';
 import { prisma } from './lib/prisma.js';
 import { MulterError } from 'multer';
 
@@ -43,6 +45,8 @@ app.get('/api/health/ready', async (_req: Request, res: Response) => {
 });
 
 app.use('/api/products', productRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/sales', salesRoutes);
 
 app.use((error: any, _req: Request, res: Response, _next: NextFunction) => {
   const status = error instanceof MulterError ? 400 : error.statusCode || error.status || 500;

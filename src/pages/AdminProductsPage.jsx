@@ -8,6 +8,7 @@ import { formatPrice, normalizeText } from '../utils/catalog';
 import ProductImage from '../components/ProductImage';
 import Modal from '../components/Modal';
 import ProductEditor from './ProductEditor';
+import AdminNavigation from '../components/AdminNavigation';
 
 export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVisibilityChange, loadProducts = fetchAdminProducts }) {
   const { showToast } = useToast();
@@ -65,6 +66,7 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
       setFilter('all'); setSearch(''); setMaterial(''); setCategory('');
     }} onCancel={() => setView('products')} />;
   return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <AdminNavigation />
     <div className="admin-toolbar mb-8"><div><p className="luxury-eyebrow">Administrador</p><h1 className="mt-3 text-5xl">Tu catálogo</h1></div><Link to="/catalogo">Ver catálogo público →</Link></div>
     <nav className="admin-options" aria-label="Administrar productos">
       <button onClick={() => edit(null)} disabled={busy || loading}><Plus /><strong>Agregar producto</strong><span>Crea una nueva pieza</span></button>
@@ -85,7 +87,7 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
         <div className="admin-product-grid">{filtered.map(product => <article key={product.id} className="admin-product-card">
           <button className="admin-product-photo" disabled={busy} onClick={() => edit(product)} aria-label={`Editar ${product.name}`}><ProductImage src={product.image} alt={product.name} /></button>
           <div className="admin-product-info"><span className={`admin-status ${product.visible ? '' : 'is-hidden'}`}>{product.visible ? <Eye size={13} /> : <EyeOff size={13} />}{product.visible ? 'Visible' : 'Oculto'}</span>
-            <p className="mt-3 text-xs text-ink-muted">{materialLabels[product.material]}</p><h3 className="mt-1 text-2xl">{product.name}</h3><p className="mt-2 font-semibold">{formatPrice(product.price)} <small>COP</small></p><p className="mt-1 text-sm text-ink-muted">Stock: {product.stock ?? 'Sin definir'}{product.featured ? ' · Destacado' : ''}</p>
+            <p className="mt-3 text-xs text-ink-muted">{materialLabels[product.material]}</p><h3 className="mt-1 text-2xl">{product.name}</h3><p className="mt-2 font-semibold">{formatPrice(product.price)} <small>COP</small></p><p className="mt-1 text-sm text-ink-muted">{product.featured ? 'Destacado' : ''}</p>
             <div className="admin-card-actions"><button disabled={busy} onClick={() => edit(product)}><Pencil size={16} />Editar</button><button disabled={busy} onClick={() => toggleVisibility(product)}>{product.visible ? <EyeOff size={16} /> : <Eye size={16} />}{product.visible ? 'Ocultar' : 'Mostrar'}</button><button disabled={busy} className="admin-delete" onClick={() => setPendingDelete(product)}><Trash2 size={16} />Eliminar</button></div>
           </div>
         </article>)}</div>

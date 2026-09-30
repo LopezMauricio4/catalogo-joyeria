@@ -6,9 +6,24 @@ import { prisma } from '../lib/prisma.js';
 
 const payload = { name: 'Prueba', price: 150, material: 'oro-18k', category: 'anillos', stock: 2, image: 'https://example.com/test.jpg' };
 
-test('validación rechaza stock fraccionario, precio inválido y material desconocido antes de escribir', async () => {
+test('catálogo crea productos sin insumos y no consulta ni expone inventario', async () => {
+  let query: any;
+  const service = new ProductService({ product: {
+    create: async (args: any) => { query = args; return { id: 'new', stock: 0, ...args.data }; },
+    findMany: async (args: any) => { query = args; return [{ id: 'old', stock: 0, components: [{ item: { unitCost: 100 } }], inventoryConfigured: true }]; },
+  } } as any);
+  const created = await service.crearProducto({ name: 'Joya', price: 100, material: 'laminado', category: 'manillas', image: payload.image });
+  assert.equal(created.id, 'new');
+  assert.equal('components' in query.data, false);
+  assert.equal('stock' in created, false);
+  const [listed] = await service.obtenerProductos();
+  assert.equal(query.include, undefined);
+  for (const field of ['stock', 'components', 'inventoryConfigured']) assert.equal(field in listed, false);
+});
+
+test('validación rechaza precio inválido y material desconocido antes de escribir', async () => {
   const service = new ProductService({ product: {} } as any);
-  for (const change of [{ stock: 1.5 }, { stock: -1 }, { price: 'NaN' }, { material: 'otro' }, { image: 'javascript:alert(1)' }]) {
+  for (const change of [{ price: 'NaN' }, { material: 'otro' }, { image: 'javascript:alert(1)' }]) {
     await assert.rejects(service.crearProducto({ ...payload, ...change }));
   }
 });
@@ -23,7 +38,7 @@ test('editar usa update, mantiene el ID y conserva todas las imágenes', async (
   const result = await service.actualizarProducto('same-id', { ...payload, name: 'Editado', stock: 0, featured: true });
   assert.equal(updated.where.id, 'same-id');
   assert.equal(result.name, 'Editado');
-  assert.equal(result.stock, 0);
+  assert.equal('stock' in result, false);
   assert.equal(result.featured, true);
   assert.equal(result.visible, false);
   assert.deepEqual(result.images, existing.images);
@@ -76,7 +91,7 @@ test('base real: crear, leer, editar y eliminar dentro de una transacción rever
       await service.actualizarProducto(created.id, { ...payload, name: 'Editado', price: 200, stock: 0, featured: true });
       const updated = await tx.product.findUnique({ where: { id: created.id } });
       assert.equal(updated?.price, 200);
-      assert.equal(updated?.stock, 0);
+      assert.equal(updated?.stock, found?.stock); // Catalog edits do not manage inventory.
       assert.equal(updated?.featured, true);
       await service.eliminarProducto(created.id);
       assert.equal(await tx.product.findUnique({ where: { id: created.id } }), null);
@@ -97,10 +112,11 @@ test('visibilidad exige booleano y solo actualiza esa propiedad', async () => {
   const existing = { ...payload, id: 'id', visible: true, images: [payload.image] };
   const service = new ProductService({ product: { update: async (input: any) => { args = input; return { ...existing, ...input.data }; } } } as any);
   for (const invalid of [undefined, null, 'false', 0]) await assert.rejects(service.cambiarVisibilidad('id', invalid), { status: 400 });
-  assert.equal(args, undefined);
+  assert.equal(Boolean(args), false);
   const hidden = await service.cambiarVisibilidad('id', false);
-  assert.deepEqual(args, { where: { id: 'id' }, data: { visible: false } });
-  assert.equal(hidden.stock, existing.stock);
+  assert.deepEqual(args.data, { visible: false });
+  assert.equal(args.where.id, 'id');
+  assert.equal('stock' in hidden, false);
   assert.deepEqual(hidden.images, existing.images);
   assert.equal((await service.cambiarVisibilidad('id', true)).visible, true);
 });

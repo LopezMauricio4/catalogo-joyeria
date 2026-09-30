@@ -1,5 +1,6 @@
-import { formatPrice, isSoldOut, materialNames } from './catalog.js';
+import { formatPrice, materialNames } from './catalog.js';
 import { cartSubtotal } from './cart.js';
+import { business } from '../data/legal.js';
 
 export const generateCartMessage = (rows, origin = '') => [
   'Hola, Alpez. Quisiera pedir estas joyas:',
@@ -15,7 +16,7 @@ export const generateCartMessage = (rows, origin = '') => [
   '¿Me confirmas disponibilidad, total y opciones de entrega? El envío se acuerda por WhatsApp.',
 ].filter(Boolean).join('\n');
 
-export const WHATSAPP_NUMBER = '573105758222';
+export const WHATSAPP_NUMBER = business.whatsappNumber;
 
 export const buildWhatsAppLink = (message = '') => {
   const safeMessage = encodeURIComponent(message || 'Hola, quiero información sobre sus joyas.');
@@ -31,8 +32,6 @@ export const generateProductMessage = (product, origin = '') => {
     product?.price > 0 && `Precio del catálogo: ${formatPrice(product.price)} COP.`,
     product?.id && `Referencia: ${product.id}`,
     origin && product?.id && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
-    product && isSoldOut(product)
-      ? 'Veo que está agotada. ¿Volverá a estar disponible o tienen una pieza similar?'
-      : '¿Me confirmas disponibilidad y opciones de entrega para hacer mi compra?',
+    '¿Me confirmas disponibilidad y opciones de entrega para hacer mi compra?',
   ].filter(Boolean).join('\n');
 };

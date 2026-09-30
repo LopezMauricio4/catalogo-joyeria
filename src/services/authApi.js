@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { PRIVACY_CONSENT, PRIVACY_VERSION } from '../data/legal';
 
 const requireSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
@@ -22,11 +23,12 @@ export const signIn = async (email, password) => {
   return data.user;
 };
 
-export const signUp = async (name, email, password) => {
+export const signUp = async (name, email, password, privacyAccepted = false) => {
+  if (privacyAccepted !== true) throw new Error('La autorización de datos personales es necesaria para registrar la cuenta.');
   const { data, error } = await requireSupabase().auth.signUp({
     email,
     password,
-    options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/auth` },
+    options: { data: { full_name: name, privacy_consent: { accepted: true, version: PRIVACY_VERSION, text: PRIVACY_CONSENT, recorded_at: new Date().toISOString(), source: 'web-registration' } }, emailRedirectTo: `${window.location.origin}/auth` },
   });
   if (error) throw error;
   return data;

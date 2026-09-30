@@ -25,6 +25,7 @@ export interface CrearProductoDTO {
   featured?: boolean | string;
   features?: string | string[];
   image?: string;
+  components?: unknown;
 }
 
 export type ArchivoConBuffer = {
