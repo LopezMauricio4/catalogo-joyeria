@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Loader2, Save, Star, X, ZoomIn } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Loader2, Save, Star } from "lucide-react";
 import { useToast } from "../hooks/useToast";
 import { categories, materialLabels } from "../data/mockProducts";
-import ProductImage from '../components/ProductImage';
-import Modal from '../components/Modal';
+import ProductGalleryEditor from '../components/ProductGalleryEditor';
+import { imageOrder } from '../utils/imageOrder';
 import { disclosureFeatures, readProductDisclosure } from '../utils/productDisclosure';
+import { prepareProductImages } from '../utils/productUpload';
 
 
 const emptyProduct = {
@@ -21,33 +22,18 @@ const emptyProduct = {
   measurements: '',
 };
 
-const ImagePreview = ({ file, index, onRemove }) => {
-  const ref = useRef(null);
-  const [preview, setPreview] = useState('');
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    ref.current.src = url;
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-  return <div className="editor-image-tile">
-    <button type="button" className="editor-image-open" onClick={() => setPreview(ref.current.src)} aria-label={`Ampliar imagen ${index + 1}: ${file.name}`}>
-      <img ref={ref} alt={file.name} /><span aria-hidden="true"><ZoomIn size={16} /></span>
-    </button>
-    <button type="button" className="editor-image-remove" onClick={onRemove} aria-label={`Quitar imagen ${index + 1}: ${file.name}`}><X size={16} /></button>
-    <p title={file.name}>{file.name}</p>
-    <Modal open={Boolean(preview)} onClose={() => setPreview('')} title="Vista previa de la imagen" className="editor-image-dialog">
-      <img src={preview || undefined} alt={file.name} className="editor-image-expanded" />
-      <p className="mt-3 break-all text-sm text-ink-muted">{file.name}</p>
-    </Modal>
-  </div>;
-};
-
 const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   const { showToast } = useToast();
-  const [form, setForm] = useState(product ? { ...product, price: String(product.price), ...readProductDisclosure(product.features) } : emptyProduct);
+  const [form, setForm] = useState(product ? { ...product, image: '', price: String(product.price), ...readProductDisclosure(product.features) } : emptyProduct);
   const editingId = product?.id;
   const needsMeasurements = ['cadenas', 'pulseras'].includes(form.category);
-  const [selectedFiles, setSelectedFiles] = useState([]);
+
+  const [gallery, setGallery] = useState(() => [...new Set([product?.image, ...(product?.images || [])].filter(Boolean))].map((src, index) => ({ id: 'existing:' + index, src })));
+  const selectedFiles = gallery.filter(image => image.file).map(image => image.file);
+  const existingImages = gallery.filter(image => image.src).map(image => image.src);
+  const originalImages = [...new Set([product?.image, ...(product?.images || [])].filter(Boolean))];
+  const linkedImageCount = form.image.trim() && !existingImages.includes(form.image.trim()) ? 1 : 0;
+  const imageCount = existingImages.length + selectedFiles.length + linkedImageCount;
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const handleChange = (event) => {
@@ -61,11 +47,11 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
     event.target.value = '';
     if (!files.length) return;
     const newFiles = files.filter(file => !selectedFiles.some(existing => existing.name === file.name && existing.size === file.size && existing.lastModified === file.lastModified));
-    if (selectedFiles.length + newFiles.length > 5) { setFormError("Puedes subir hasta 5 imágenes. Quita alguna antes de agregar más."); return; }
+    if (imageCount + newFiles.length > 5) { setFormError("El producto puede tener hasta 5 imágenes. Quita alguna antes de agregar más."); return; }
     if (newFiles.some(file => !['image/jpeg', 'image/png', 'image/webp', 'image/avif'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
       setFormError('Usa imágenes JPG, PNG, WEBP o AVIF de máximo 5 MB cada una.'); return;
     }
-    setFormError(""); setSelectedFiles(current => [...current, ...newFiles]);
+    setFormError(""); setGallery(current => [...current, ...newFiles.map(file => ({ id: 'new:' + crypto.randomUUID(), file }))]);
   };
 
   const handleSubmit = async (event) => {
@@ -81,6 +67,8 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
       return;
     }
     if (needsMeasurements && !form.measurements.trim()) { setFormError('Completa las medidas y tallas de la cadena o pulsera.'); return; }
+    if (imageCount > 5) { setFormError('El producto puede tener hasta 5 imágenes. Quita alguna antes de guardar.'); return; }
+    if (!imageCount) { setFormError('Conserva o agrega al menos una imagen del producto.'); return; }
 
 
     const productPayload = new FormData();
@@ -91,18 +79,18 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
     productPayload.append("category", form.category);
 
     productPayload.append("featured", String(form.featured));
+    if (editingId) productPayload.append('removedImages', JSON.stringify(originalImages.filter(src => !existingImages.includes(src))));
     disclosureFeatures({ ...form, measurements: needsMeasurements ? form.measurements : '' }).forEach(feature => productPayload.append('features', feature));
 
     if (form.image && form.image.trim()) {
       productPayload.append("image", form.image.trim());
     }
 
-    selectedFiles.forEach((file) => {
-      productPayload.append("imagenes", file);
-    });
-
     try {
       setIsSaving(true);
+      const files = await prepareProductImages(selectedFiles);
+      files.forEach(file => productPayload.append('imagenes', file));
+      productPayload.append('imageOrder', JSON.stringify([...imageOrder(gallery), ...(linkedImageCount ? [form.image.trim()] : [])]));
       await onSaveProduct(productPayload, editingId);
       showToast(editingId ? "Producto actualizado" : "Producto creado", "success");
       onCancel();
@@ -221,7 +209,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
 </section>
             <div className="product-editor-section">
             <label className="product-editor-field">
-              Imagen (URL opcional)
+              {editingId ? 'Agregar imagen por URL (opcional)' : 'Imagen (URL opcional)'}
               <input
                 name="image"
                 value={form.image}
@@ -241,17 +229,10 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 className="product-editor-file-input mt-2 block w-full"
               />
             </label>
-              {selectedFiles.length > 0 && (
-                <div className="editor-image-selection" aria-label="Imágenes seleccionadas para subir">
-                  {selectedFiles.map((file, index) => (
-                    <ImagePreview key={`${file.name}-${file.size}-${file.lastModified}`} file={file} index={index} onRemove={() => { setSelectedFiles(current => current.filter(item => item !== file)); setFormError(''); }} />
-                  ))}
-                </div>
-              )}
-            <p className="text-sm text-ink-muted" role="status">{selectedFiles.length}/5 imágenes seleccionadas.</p>
+            {gallery.length > 0 && <ProductGalleryEditor images={gallery} onChange={updater => { setGallery(updater); setFormError('' ); }} />}
+            <p className="text-sm text-ink-muted" role="status">{imageCount}/5 imágenes en el producto.</p>
 
-            {editingId && selectedFiles.length === 0 && <div className="flex flex-wrap gap-2" aria-label="Imágenes actuales">{product.images.map((src, index) => <ProductImage key={`${src}-${index}`} src={src} alt={`Imagen actual ${index + 1}`} className="h-16 w-16 rounded-xl object-cover" />)}</div>}
-            {editingId && <p className="text-sm text-ink-muted editor-gallery-note">Las fotos nuevas reemplazan la galería actual.</p>}
+            <p className="text-sm text-ink-muted editor-gallery-note">Arrastra las fotos para ordenarlas. La primera será la portada. Los cambios se aplican al guardar.</p>
             </div>
 
             <div className="product-editor-section">

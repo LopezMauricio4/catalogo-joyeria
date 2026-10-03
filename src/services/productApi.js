@@ -1,4 +1,5 @@
 import { getAccessToken } from "./authApi";
+import { readProductSaveResponse } from '../utils/productUpload';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -80,11 +81,7 @@ export const createProduct = async (formData) => {
     body: formData,
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'No se pudo crear el producto.');
-  }
+  const data = await readProductSaveResponse(response, 'No se pudo crear el producto.');
 
   return normalizeProduct(data.product);
 };
@@ -108,7 +105,6 @@ export const updateProduct = async (productId, formData) => {
   const response = await fetch(`${API_BASE_URL}/products/${encodeURIComponent(productId)}`, {
     method: 'PUT', headers: await getAuthHeaders(), body: formData,
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'No se pudo actualizar el producto.');
+  const data = await readProductSaveResponse(response, 'No se pudo actualizar el producto.');
   return normalizeProduct(data.product);
 };

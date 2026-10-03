@@ -1069,3 +1069,9 @@ p {
   .product-detail-links .product-warranty-link { gap:3px; justify-content:flex-end; }
   .product-warranty-link span { font-size:11px; }
 }
+
+.editor-image-order { display:flex; align-items:center; gap:4px; margin-top:5px; font-size:11px; color:#536860; }
+.editor-image-drag { display:inline-flex; justify-content:center; align-items:center; width:30px; height:30px; border:1px solid #cdd4ce; border-radius:6px; background:#fffdf9; cursor:grab; touch-action:none; user-select:none; }
+.editor-image-drag:active { cursor:grabbing; }
+.editor-image-tile[draggable='true'] { cursor:grab; }
+.editor-image-open img { -webkit-user-drag:none; user-select:none; }

@@ -25,6 +25,8 @@ export interface CrearProductoDTO {
   featured?: boolean | string;
   features?: string | string[];
   image?: string;
+  removedImages?: string | string[];
+  imageOrder?: string | string[];
   components?: unknown;
 }
 

@@ -39,11 +39,27 @@ export class ProductService {
   private async images(datos: CrearProductoDTO, files: ArchivoConBuffer[], existing?: ProductoRespuesta) {
     const direct = datos.image?.trim();
     if (direct) imageUrl(direct);
-    // Una edición de texto conserva toda la galería existente.
-    if (!files.length && existing && (!direct || direct === existing.image)) return existing.images.length ? existing.images : [existing.image!];
-    if (!files.length && !direct) throw new ProductError('Debes indicar al menos una imagen.');
+    const current = [...new Set([existing?.image, ...(existing?.images || [])].filter((url): url is string => Boolean(url)))];
+    let removed: unknown = datos.removedImages ?? [];
+    if (typeof removed === 'string') {
+      try { removed = JSON.parse(removed); }
+      catch { throw new ProductError('La selección de imágenes a eliminar no es válida.'); }
+    }
+    if (!Array.isArray(removed) || removed.some(url => typeof url !== 'string' || !current.includes(url))) throw new ProductError('Solo puedes quitar imágenes actuales de este producto.');
+    const retained = current.filter(url => !(removed as string[]).includes(url));
+    const linked = [...new Set([...retained, ...(direct ? [direct] : [])])];
+    if (linked.length + files.length > 5) throw new ProductError('El producto puede tener hasta 5 imágenes. Quita alguna antes de agregar más.');
+    if (!files.length && !linked.length) throw new ProductError('Debes conservar o agregar al menos una imagen.');
+    const references = [...linked, ...files.map((_, index) => `new:${index}`)];
+    let order: unknown = datos.imageOrder ?? references;
+    if (typeof order === 'string') {
+      try { order = JSON.parse(order); }
+      catch { throw new ProductError('El orden de las imágenes no es válido.'); }
+    }
+    if (!Array.isArray(order) || order.length !== references.length || new Set(order).size !== order.length || order.some(ref => typeof ref !== 'string' || !references.includes(ref))) throw new ProductError('El orden debe incluir cada imagen del producto una sola vez.');
     const uploaded = files.length ? await this.uploadImages(files) : [];
-    return [...new Set([...uploaded, ...(direct ? [direct] : [])])];
+    const urls = new Map([...linked.map(url => [url, url] as const), ...uploaded.map((url, index) => [`new:${index}`, url] as const)]);
+    return [...new Set((order as string[]).map(ref => urls.get(ref)!))];
   }
 
   async crearProducto(datos: CrearProductoDTO, files: ArchivoConBuffer[] = []): Promise<ProductoRespuesta> {
