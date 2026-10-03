@@ -9,8 +9,8 @@ export const business = {
   nit: '',
   address: 'Barrio Abbas Turbay, Florencia, Caquetá, Colombia',
   email: 'alpezjoyeria@gmail.com',
-  phone: '+57 321 912 9345',
-  whatsappNumber: '573219129345',
+  phone: '+57 320 810 3686',
+  whatsappNumber: '573208103686',
 };
 export const PRIVACY_VERSION = '2026-09-30.2';
 export const PRIVACY_PATH = '/politica-de-datos';
