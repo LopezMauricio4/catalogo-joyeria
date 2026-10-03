@@ -153,7 +153,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        {!authLoading && user.role !== "admin" && <FloatingWhatsApp />}
       </div>
     </Router>
   );

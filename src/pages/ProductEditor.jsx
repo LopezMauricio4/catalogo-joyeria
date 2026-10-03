@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Loader2, Pencil, Plus, Save, Star, X, ZoomIn } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Star, X, ZoomIn } from "lucide-react";
 import { useToast } from "../hooks/useToast";
 import { categories, materialLabels } from "../data/mockProducts";
 import ProductImage from '../components/ProductImage';
@@ -46,6 +46,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   const { showToast } = useToast();
   const [form, setForm] = useState(product ? { ...product, price: String(product.price), ...readProductDisclosure(product.features) } : emptyProduct);
   const editingId = product?.id;
+  const needsMeasurements = ['cadenas', 'pulseras'].includes(form.category);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -79,7 +80,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
       setFormError("Completa nombre, descripción y un precio válido antes de guardar.");
       return;
     }
-    if (!form.composition.trim() || !form.measurements.trim()) { setFormError('Completa la composición y las medidas de la pieza.'); return; }
+    if (needsMeasurements && !form.measurements.trim()) { setFormError('Completa las medidas y tallas de la cadena o pulsera.'); return; }
 
 
     const productPayload = new FormData();
@@ -90,7 +91,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
     productPayload.append("category", form.category);
 
     productPayload.append("featured", String(form.featured));
-    disclosureFeatures(form).forEach(feature => productPayload.append('features', feature));
+    disclosureFeatures({ ...form, measurements: needsMeasurements ? form.measurements : '' }).forEach(feature => productPayload.append('features', feature));
 
     if (form.image && form.image.trim()) {
       productPayload.append("image", form.image.trim());
@@ -114,7 +115,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   };
 
   return (
-    <main className="product-editor-page mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <main className="product-editor-page product-editor-compact mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="luxury-eyebrow">Administrador</p>
@@ -130,16 +131,9 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
 
       <div className="mx-auto max-w-4xl">
         <section className="product-editor-card">
-          <div className="product-editor-card-heading">
-            <div className="product-editor-icon">
-              {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            </div>
-            <div><p className="luxury-eyebrow">Ficha de producto</p><h2>{editingId ? "Editar producto" : "Nuevo producto"}</h2></div>
-          </div>
-
           {editingId && <p className="product-editor-note">{product.visible ? "Visible en el catálogo." : "Oculto: guardar cambios no lo publicará."}</p>}
-          <form onSubmit={handleSubmit}><fieldset disabled={isSaving} className="space-y-5">
-            <div className="product-editor-section"><div className="product-editor-section-title"><span>01</span><div><h3>Información básica</h3></div></div>
+          <form onSubmit={handleSubmit}><fieldset disabled={isSaving} className="product-editor-fields">
+            <div className="product-editor-section">
             <div className="grid gap-5 md:grid-cols-2">
               <label className="product-editor-field">
                 Nombre
@@ -156,7 +150,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             </div>
             </div>
 
-            <div className="product-editor-section"><div className="product-editor-section-title"><span>02</span><div><h3>Clasificación</h3></div></div>
+            <div className="product-editor-section">
             <div className="grid gap-5 md:grid-cols-2">
               <label className="product-editor-field">
                 Categoría
@@ -189,10 +183,9 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             </div>
 
 
-            <div className="grid gap-5 md:grid-cols-2">
-              <label className="product-editor-field">Composición y materiales<input required name="composition" value={form.composition} onChange={handleChange} placeholder="Indica composición real, recubrimiento y otros materiales" /></label>
+            {needsMeasurements && <div className="grid gap-5 md:grid-cols-2">
               <label className="product-editor-field">Medidas y tallas<input required name="measurements" value={form.measurements} onChange={handleChange} placeholder="Ej. longitud 18 cm, grosor 3 mm" /></label>
-            </div>
+            </div>}
             <div className="grid gap-5 md:grid-cols-2">
 
               <label className="product-editor-featured mt-2 flex items-center gap-3 self-end rounded-2xl border border-line bg-ivory-soft px-4 py-3.5 text-sm text-ink-soft">
@@ -211,7 +204,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             </div>
             </div>
 
-            <section className="product-editor-section"><div className="product-editor-section-title"><span>03</span><div><h3>Precio</h3></div></div>
+            <section className="product-editor-section">
 <div className="product-final-price">              <label className="product-editor-field">
               Precio final de la pieza (COP, impuestos incluidos)
                 <input
@@ -226,7 +219,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 />
               </label></div>
 </section>
-            <div className="product-editor-section"><div className="product-editor-section-title"><span>04</span><div><h3>Imágenes</h3></div></div>
+            <div className="product-editor-section">
             <label className="product-editor-field">
               Imagen (URL opcional)
               <input
@@ -258,17 +251,17 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             <p className="text-sm text-ink-muted" role="status">{selectedFiles.length}/5 imágenes seleccionadas.</p>
 
             {editingId && selectedFiles.length === 0 && <div className="flex flex-wrap gap-2" aria-label="Imágenes actuales">{product.images.map((src, index) => <ProductImage key={`${src}-${index}`} src={src} alt={`Imagen actual ${index + 1}`} className="h-16 w-16 rounded-xl object-cover" />)}</div>}
-            <p className="text-sm text-ink-muted">Las fotos nuevas reemplazan la galería actual.</p>
+            {editingId && <p className="text-sm text-ink-muted editor-gallery-note">Las fotos nuevas reemplazan la galería actual.</p>}
             </div>
 
-            <div className="product-editor-section"><div className="product-editor-section-title"><span>05</span><div><h3>Descripción y características</h3></div></div>
+            <div className="product-editor-section">
             <label className="product-editor-field">
               Descripción
               <textarea
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                rows="4"
+                rows="2"
                 className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
                 placeholder="Describe la pieza..."
               />
@@ -280,7 +273,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 name="features"
                 value={form.features}
                 onChange={handleChange}
-                rows="3"
+                rows="2"
                 className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
                 placeholder="18 kilates, Acabado brillante, Diseño atemporal"
               />

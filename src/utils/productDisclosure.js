@@ -5,6 +5,8 @@ export function readProductDisclosure(features = []) {
 }
 
 export function disclosureFeatures(form) {
-  return [`Composición: ${form.composition.trim()}`, `Medidas: ${form.measurements.trim()}`,
+  const composition = String(form.composition || '').trim();
+  const measurements = String(form.measurements || '').trim();
+  return [...(composition ? [`Composición: ${composition}`] : []), ...(measurements ? [`Medidas: ${measurements}`] : []),
     ...String(form.features || '').split(',').map(value => value.trim()).filter(Boolean)];
 }

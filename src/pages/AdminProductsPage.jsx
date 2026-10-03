@@ -76,11 +76,11 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
     {view === 'home' && <p className="mt-6 text-ink-muted">Selecciona una opción para comenzar.</p>}
     {view === 'products' && <section className="mt-8" aria-label="Lista de productos">
       <div className="admin-toolbar"><h2 className="text-3xl">{filter === 'hidden' ? 'Productos ocultos' : 'Administrar productos'}</h2><button className="shop-button" disabled={loading || busy} onClick={() => { setLoading(true); setLoadError(''); setRevision(n => n + 1); }}><RefreshCw size={16} />Actualizar lista</button></div>
-      <div className="admin-filters">
-        <label>Buscar producto<div className="admin-search"><Search size={18} /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre o descripción…" /></div></label>
-        <label>Visibilidad<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos los productos</option><option value="visible">Visibles</option><option value="hidden">Ocultos</option></select></label>
-        <label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos los materiales</option>{Object.entries(materialLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
-        <label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas las categorías</option>{categories.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
+      <div className="admin-filters admin-product-filters">
+        <label className="admin-product-search">Buscar<div className="admin-search"><Search size={15} aria-hidden="true" /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre o descripción…" /></div></label>
+        <label>Visibilidad<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos</option><option value="visible">Visibles</option><option value="hidden">Ocultos</option></select></label>
+        <label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{Object.entries(materialLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
       </div>
       {loadError ? <p role="alert" className="my-6 text-red-700">{loadError} Usa “Actualizar lista” para reintentar.</p> : loading ? <p role="status" className="my-6">Cargando productos…</p> : <>
         <p role="status" className="my-5 text-sm text-ink-muted">{filtered.length} productos</p>

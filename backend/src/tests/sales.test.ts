@@ -41,7 +41,7 @@ test('reparto de total conserva centavos, admite precio cero y cantidades fracci
 });
 
 test('venta por total usa costos del servidor y descuenta todos los insumos', async () => {
-  const item = { id: 'a', name: 'Balín', sku: 'A', unit: 'unidad', active: true, stock: new Prisma.Decimal(10), unitCost: new Prisma.Decimal('4.25'), salePrice: new Prisma.Decimal(8) };
+  const item = { id: 'a', name: 'Balín', category: 'balines', size: '4 mm', sku: 'A', unit: 'milimetro', active: true, stock: new Prisma.Decimal(10), unitCost: new Prisma.Decimal('4.25'), salePrice: new Prisma.Decimal(8) };
   let saved: any, stock: any, movement: any;
   const tx: any = {
     sale: { findUnique: async () => null, create: async ({ data }: any) => { saved = { id: 'sale', ...data }; return saved; } },
@@ -51,6 +51,9 @@ test('venta por total usa costos del servidor y descuenta todos los insumos', as
   const service = new SalesService((async (operation: any) => operation(tx)) as any);
   await service.create(input('a', { total: '20', lines: [{ kind: 'inventory', id: 'a', quantity: 3, unitCost: 0 }] }), actor);
   assert.equal(saved.total.toString(), '20');
+  assert.equal(saved.lines.create[0].name, 'Balín de 4 mm');
+  assert.equal(saved.lines.create[0].unit, 'unidad');
+  assert.equal(saved.lines.create[0].quantity.toString(), '3');
   assert.equal(saved.totalCost.toString(), '12.75');
   assert.equal(saved.total.sub(saved.totalCost).toString(), '7.25');
   assert.equal(stock.toString(), '7');

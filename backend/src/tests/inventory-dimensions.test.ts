@@ -10,11 +10,19 @@ test('editar precios conserva stock mínimo, estado y descripción omitidos', as
   let saved: any;
   const db: any = { inventoryItem: { findUnique: async () => existing, update: async ({ data }: any) => { saved = data; return data; } } };
   const service = new InventoryService(db, undefined, (async (operation: any) => operation(db)) as any);
-  await service.update('a', { ...base, size: '4 mm', unitCost: '20', salePrice: '30', stock: 500 });
+  await service.update('a', { ...base, sku: undefined, size: '4 mm', unitCost: '20', salePrice: '30', stock: 500 });
+  assert.equal(saved.sku, existing.sku);
   assert.equal(saved.minStock, 3);
   assert.equal(saved.active, false);
   assert.equal(saved.description, 'Referencia interna');
   assert.equal('stock' in saved, false);
+});
+
+test('insumos sin SKU reciben códigos automáticos distintos aunque compartan nombre', async () => {
+  const first = await service.create({ ...base, sku: undefined, size: '4' });
+  const second = await service.create({ ...base, sku: undefined, size: '5' });
+  assert.match(first.sku, /^INS-[A-F0-9-]+$/);
+  assert.notEqual(first.sku, second.sku);
 });
 
 test('balines laminados: seis tamaños válidos, normalizados a mm', async () => {

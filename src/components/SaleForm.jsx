@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { inventoryName } from '../utils/inventoryName';
 
 const money = value => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 2 }).format(value);
 const localNow = () => { const date = new Date(); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
@@ -30,7 +31,7 @@ export default function SaleForm({ onSaved, onCancel, services }) {
     const previous = lines.find(line => line.id === draft.id);
     const combined = Math.round((qty + Number(previous?.quantity || 0)) * 1e6) / 1e6;
     if (!selected?.active || !Number.isFinite(qty) || qty <= 0 || Math.abs(qty * 1e6 - Math.round(qty * 1e6)) > 0.00001) { setError('Selecciona un artículo y una cantidad válida.'); return; }
-    if (['unidad', 'par'].includes(selected.unit) && !Number.isInteger(qty)) { setError('Indica una cantidad entera.'); return; }
+    if ((selected.category === 'balines' || ['unidad', 'par'].includes(selected.unit)) && !Number.isInteger(qty)) { setError('Indica una cantidad entera.'); return; }
     if (combined > Number(selected.stock)) { setError(`Solo hay ${selected.stock} disponibles de ${selected.name}.`); return; }
     if (!previous && lines.length >= 50) { setError('Puedes registrar hasta 50 artículos distintos.'); return; }
     setLines(current => previous ? current.map(line => line.id === draft.id ? { ...line, quantity: combined } : line) : [...current, { id: draft.id, quantity: qty }]);
@@ -54,7 +55,7 @@ export default function SaleForm({ onSaved, onCancel, services }) {
     finally { lock.current = false; setBusy(false); }
   };
   const update = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
-  return <form className="inventory-form sales-form" onSubmit={submit}>
+  return <form className="inventory-form sales-form admin-form-compact" onSubmit={submit}>
     <h2 className="text-3xl">Registrar venta</h2>
     <fieldset disabled={busy || loading || Boolean(loadError)}>
       <div className="inventory-fields inventory-fields-three my-6">
@@ -63,22 +64,22 @@ export default function SaleForm({ onSaved, onCancel, services }) {
         <label className="inventory-field">Fecha y hora<input required name="occurredAt" type="datetime-local" max={localNow()} value={form.occurredAt} onChange={update} /></label>
       </div>
       <section className="sale-line-editor">
-        <h3>Agregar artículos</h3>
+
         <div className="sale-article-picker">
-          <label className="inventory-field">Artículo<select ref={picker} value={draft.id} onChange={e => setDraft({ id: e.target.value, quantity: '1' })}><option value="">Selecciona un insumo…</option>{inventory.filter(item => item.active).map(item => <option key={item.id} value={item.id}>{item.name} {item.size || ''} · {item.sku} · {item.stock} disponibles</option>)}</select></label>
-          <label className="inventory-field">Cantidad<input type="number" min={['unidad', 'par'].includes(selected?.unit) ? '1' : '0.000001'} step={['unidad', 'par'].includes(selected?.unit) ? '1' : '0.000001'} value={draft.quantity} onChange={e => setDraft({ ...draft, quantity: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} /></label>
-          <button type="button" className="shop-button" onClick={add}>{lines.length ? 'Agregar otro artículo' : 'Agregar artículo'}</button>
+          <label className="inventory-field">Artículo<select ref={picker} value={draft.id} onChange={e => setDraft({ id: e.target.value, quantity: '1' })}><option value="">Selecciona un insumo…</option>{inventory.filter(item => item.active).map(item => <option key={item.id} value={item.id}>{inventoryName(item)} · {item.material} · {item.stock} disponibles</option>)}</select></label>
+          <label className="inventory-field">Cantidad<input type="number" min={(selected?.category === 'balines' || ['unidad', 'par'].includes(selected?.unit)) ? '1' : '0.000001'} step={(selected?.category === 'balines' || ['unidad', 'par'].includes(selected?.unit)) ? '1' : '0.000001'} value={draft.quantity} onChange={e => setDraft({ ...draft, quantity: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} /></label>
+          <button type="button" className="shop-button" onClick={add}>Agregar</button>
         </div>
       </section>
       {rows.length > 0 && <section className="sale-items-summary" aria-label="Artículos de la venta">
-        <h3 className="text-2xl">Resumen de artículos</h3>
+
         {rows.map(row => <article className="sale-summary-item" key={row.id}>
-          <div><h4>{row.item?.name}</h4><p>{row.item?.sku}{row.item?.size && ` · ${row.item.size}`}</p></div>
+          <div><h4>{row.item && inventoryName(row.item)}</h4><p>{row.item?.material}</p></div>
           <dl><div><dt>Cantidad</dt><dd>{row.quantity}</dd></div><div><dt>Costo unitario</dt><dd>{money(Number(row.item?.unitCost || 0))}</dd></div><div><dt>Costo total</dt><dd>{money(cents(Number(row.item?.unitCost || 0) * row.quantity) / 100)}</dd></div></dl>
           <button type="button" className="shop-button shop-button-secondary" aria-label={`Quitar ${row.item?.name}`} onClick={() => setLines(current => current.filter(line => line.id !== row.id))}>Quitar</button>
         </article>)}
       </section>}
-      <label className="inventory-field my-5">Nota opcional<textarea name="note" maxLength={1000} value={form.note} onChange={update} /></label>
+      <label className="inventory-field my-5">Nota opcional<textarea rows="2" name="note" maxLength={1000} value={form.note} onChange={update} /></label>
       <section className="sale-price-summary">
         <label className="inventory-field">Valor total de la venta (COP)<input required name="total" type="number" inputMode="decimal" min="0" max="1000000000" step="0.01" value={form.total} onChange={update} /></label>
         <div className="materials-totals" aria-live="polite"><div><span>Costo total de artículos</span><strong>{money(costCents / 100)}</strong></div><div className={profit !== null && profit < 0 ? 'sale-loss' : ''}><span>{profit !== null && profit < 0 ? 'Pérdida bruta' : 'Ganancia bruta'}</span><strong>{profit === null ? '—' : money(profit)}</strong></div></div>

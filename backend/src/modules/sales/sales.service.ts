@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { stockTransaction } from '../../lib/transactions.js';
 import { componentInclude } from '../products/availability.js';
+import { inventorySaleName, presentSaleLine } from '../inventory/inventory-name.js';
 
 export class SaleError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -60,10 +61,10 @@ export class SalesService {
   async list(page = 1) {
     const take = 30;
     const [sales, total] = await prisma.$transaction([
-      prisma.sale.findMany({ orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * take, take, include: { lines: true } }),
+      prisma.sale.findMany({ orderBy: [{ occurredAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * take, take, include: { lines: { include: { item: { select: { name: true, category: true, size: true, lengthCm: true, thicknessMm: true } } } } } }),
       prisma.sale.count(),
     ]);
-    return { sales, total, page, pages: Math.max(1, Math.ceil(total / take)) };
+    return { sales: sales.map(sale => ({ ...sale, lines: sale.lines.map(presentSaleLine) })), total, page, pages: Math.max(1, Math.ceil(total / take)) };
   }
 
   async create(input: unknown, actor: { sub: string; name: string }) {
@@ -96,8 +97,9 @@ export class SalesService {
           } else {
             const item = await tx.inventoryItem.findUnique({ where: { id: line.id } });
             if (!item || !item.active) throw new SaleError('El artículo del inventario no está disponible.');
-            if (['unidad', 'par'].includes(item.unit) && !line.quantity.isInteger()) throw new SaleError('Las unidades y los pares se venden en cantidades enteras.');
-            name = item.name; unit = item.unit; sku = item.sku; unitCost = item.unitCost;
+            unit = item.category === 'balines' ? 'unidad' : item.unit;
+            if (['unidad', 'par'].includes(unit) && !line.quantity.isInteger()) throw new SaleError('Las unidades y los pares se venden en cantidades enteras.');
+            name = inventorySaleName(item); sku = item.sku; unitCost = item.unitCost;
             if (parsed.total !== undefined) unitPrice = item.salePrice;
             need(item.id, line.quantity);
           }

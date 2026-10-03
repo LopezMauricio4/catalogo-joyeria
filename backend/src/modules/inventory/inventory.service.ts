@@ -1,4 +1,5 @@
 import { stockTransaction } from '../../lib/transactions.js';
+import { randomUUID } from 'node:crypto';
 import { InventoryMovementType, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { subirMultiplesACloudinary } from '../../cloudinary.js';
@@ -27,13 +28,12 @@ const imageUrl = (value: string) => {
 };
 
 const parseItem = (input: InventoryItemDTO) => {
-  const sku = String(input.sku ?? '').trim().toUpperCase();
+  const sku = String(input.sku ?? '').trim().toUpperCase() || `INS-${randomUUID().toUpperCase()}`;
   const name = String(input.name ?? '').trim();
   const category = String(input.category ?? '').trim().toLowerCase();
   const material = String(input.material ?? '').trim();
   let size = String(input.size ?? '').trim();
-  const unit = String(input.unit ?? 'unidad').trim().toLowerCase();
-  if (!sku) throw new InventoryError('El SKU es obligatorio.');
+  const unit = category === 'balines' ? 'unidad' : String(input.unit ?? 'unidad').trim().toLowerCase();
   if (!name) throw new InventoryError('El nombre es obligatorio.');
   if (!categories.includes(category)) throw new InventoryError('Categoría de inventario no válida.');
   if (!materials.includes(material)) throw new InventoryError('Material no válido. Selecciona oro u oro laminado.');
@@ -102,6 +102,7 @@ export class InventoryService {
     const existing = await this.db.inventoryItem.findUnique({ where: { id } });
     if (!existing) throw new InventoryError('Artículo de inventario no encontrado.', 404);
     const data = parseItem({ ...input,
+      sku: existing.sku,
       minStock: input.minStock === undefined ? existing.minStock.toString() : input.minStock,
       active: input.active === undefined ? existing.active : input.active,
       description: input.description === undefined ? existing.description ?? '' : input.description,
