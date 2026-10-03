@@ -1020,3 +1020,52 @@ p {
   .admin-product-filters .admin-product-search { grid-column:1 / -1; }
   .admin-product-filters select { padding-inline:4px; font-size:12px; }
 }
+
+.product-description-toggle { display:none; }
+@media(max-width:767px) {
+  .product-description-block { margin-block:14px; }
+  .product-description-block .product-description { margin:0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; line-clamp:3; overflow:hidden; }
+  .product-description-block .product-description.is-expanded { display:block; -webkit-line-clamp:unset; line-clamp:unset; overflow:visible; }
+  .product-description-toggle { display:inline-flex; align-items:center; min-height:36px; padding:4px 0; margin-top:3px; font-size:13px; font-weight:600; color:var(--color-forest-800); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .product-description-toggle:focus-visible { outline:2px solid #9b7b32; outline-offset:3px; border-radius:3px; }
+}
+
+
+
+@media(max-width:767px) {
+  .product-story:not(.is-details-expanded) .product-information > :is(.product-disclosure,.product-legal-note,.product-legal-links),
+  .product-story:not(.is-details-expanded) .product-extra-details { display:none; }
+  .product-story.is-details-expanded .product-description { display:block; -webkit-line-clamp:unset; line-clamp:unset; overflow:visible; }
+  .product-story > .product-description-toggle { margin-top:0; }
+  .product-story > .product-purchase { margin-block:14px; }
+}
+@media(max-width:767px) {
+  .product-detail-links { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; }
+  .product-detail-links .product-legal-links { margin:0; order:1; }
+  .product-detail-links .product-description-toggle { margin:0; flex-shrink:0; order:0; }
+  .product-story:not(.is-details-expanded) .product-detail-links .product-legal-links { display:none; }
+}
+
+.product-story .product-material-label { display:inline-block; width:fit-content; padding:7px 11px; border-radius:6px; font-size:13px; font-weight:700; letter-spacing:.06em; line-height:1.4; }
+.product-story .product-material-label[data-material='oro-18k'] { color:#8a651c; background:#faf0d5; border:1px solid #e5cc85; }
+.product-story .product-material-label[data-material='laminado'] { color:#24543e; background:#eaf2eb; border:1px solid #b9d1bf; }
+
+.jewel-card[data-material='oro-18k'] { background:#faf4e5; border:1px solid #e8d9b6; border-radius:8px; overflow:hidden; }
+.jewel-card[data-material='laminado'] { background:#eef4ee; border:1px solid #ceddce; border-radius:8px; overflow:hidden; }
+.jewel-card[data-material] .jewel-card-info { padding:10px 11px 12px; }
+.jewel-card[data-material] .jewel-card-photo { border-radius:0; }
+.jewel-card[data-material='oro-18k'] .jewel-card-material { color:#8a651c; font-weight:600; }
+.jewel-card[data-material='laminado'] .jewel-card-material { color:#24543e; font-weight:600; }
+@media(max-width:640px) { .jewel-card[data-material] .jewel-card-info { padding:8px 9px 10px; } }
+
+.product-warranty { margin-top:16px; }
+.product-warranty h2 { display:flex; align-items:center; gap:6px; font-family:var(--font-sans); font-size:12px; font-weight:600; color:#536860; }
+.product-warranty p { margin-top:4px; font-size:14px; line-height:1.5; }
+.product-warranty-link { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
+.product-warranty-link a { display:inline-flex; align-items:center; padding:5px 8px; border:1px solid #cdd4ce; border-radius:6px; background:#f7f8f3; font-size:12px; text-decoration:none; }
+.product-warranty-link a:hover { background:#edf1ea; }
+@media(max-width:767px) {
+  .product-story:not(.is-details-expanded) .product-warranty { display:none; }
+  .product-detail-links .product-warranty-link { gap:3px; justify-content:flex-end; }
+  .product-warranty-link span { font-size:11px; }
+}

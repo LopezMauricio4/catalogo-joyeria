@@ -1,6 +1,6 @@
 import { WhatsAppIcon } from '../components/SocialIcon';
-import { useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ShoppingCart, ZoomIn } from 'lucide-react';
+import { useId, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ShieldCheck, ShoppingCart, ZoomIn } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JewelryCard from '../components/JewelryCard';
 import ProductImage from '../components/ProductImage';
@@ -10,12 +10,16 @@ import { formatPrice, materialNames } from '../utils/catalog';
 import { buildWhatsAppLink, generateProductMessage } from '../utils/whatsappGenerator';
 import { stockLimit } from '../utils/cart';
 import { readProductDisclosure } from '../utils/productDisclosure';
-import { PRIVACY_PATH } from '../data/legal';
 
 function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const disclosure = readProductDisclosure(product.features);
+  const hasMeasurements = ['cadenas', 'pulseras'].includes(product.category);
+  const features = (product.features || []).filter(feature => hasMeasurements || !feature.startsWith('Medidas: '));
   const [selected, setSelected] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const [detailsExpanded, setDetailsExpanded] = useState(false);
+  const detailsId = useId();
+  const extraDetailsId = useId();
   const touch = useRef(null);
   const images = [...new Set([product.image, ...(product.images || [])].filter(Boolean))];
   const index = Math.min(selected, Math.max(0, images.length - 1));
@@ -43,15 +47,26 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
         {images.length > 1 && <div className="product-gallery-thumbnails" role="group" aria-label="Imágenes de la pieza">{images.map((image, position) => <button key={image} type="button" aria-label={`Ver imagen ${position + 1} de ${images.length}`} aria-pressed={index === position} onClick={() => setSelected(position)}><ProductImage src={image} alt={`${product.name}, vista ${position + 1}`} /></button>)}</div>}
         <span className="sr-only" aria-live="polite">Imagen {index + 1} de {images.length || 1}</span>
       </div>
-      <div className="product-story"><p className="shop-eyebrow">{materialNames[product.material] || product.material}</p><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p></div>
-        <p className="product-description">{product.description || 'Conoce todos los detalles de esta pieza con nuestra asesoría personalizada.'}</p>
-        <dl className="product-disclosure"><div><dt>Material</dt><dd>{disclosure.composition || materialNames[product.material] || product.material}</dd></div><div><dt>Medidas y tallas</dt><dd>{disclosure.measurements || 'Solicita las medidas de esta pieza antes de confirmar tu compra.'}</dd></div></dl>
-        <p className="product-legal-note">Precio de la pieza en COP, incluidos los impuestos aplicables. El envío se informa por separado y se acuerda el total antes de confirmar la compra por WhatsApp.</p>
-        <p className="product-legal-links"><Link to="/garantias-y-cambios">Garantías y cambios</Link> · <Link to={PRIVACY_PATH}>Tratamiento de datos</Link></p>
+      <div className={`product-story${detailsExpanded ? ' is-details-expanded' : ''}`}><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p><p className="shop-eyebrow product-material-label" data-material={product.material}>{materialNames[product.material] || product.material}</p></div>
+        <div id={detailsId} className="product-information">
+        <div className="product-description-block"><p className="product-description">{product.description || 'Conoce todos los detalles de esta pieza con nuestra asesoría personalizada.'}</p></div>
+        <dl className="product-disclosure"><div><dt>Material</dt><dd>{disclosure.composition || materialNames[product.material] || product.material}</dd></div>{hasMeasurements && <div><dt>Medidas y tallas</dt><dd>{disclosure.measurements || 'Solicita las medidas de esta pieza antes de confirmar tu compra.'}</dd></div>}</dl>
+        <p className="product-legal-note">El envío se informa por separado y se acuerda el total antes de confirmar la compra por WhatsApp.</p>
+        <section className="product-warranty" aria-label="Garantía de la prenda">
+          <h2><ShieldCheck size={16} aria-hidden="true" />Garantía</h2>
+          <p>{product.material === 'oro-18k' ? 'Garantía de por vida en el material.' : 'Garantía de 1 año por cambio de tonalidad.'}</p>
+        </section>
+        </div>
+        <div className="product-detail-links">
+        <p className="product-legal-links product-warranty-link"><span>Conoce más en</span> <Link to="/garantias-y-cambios">Garantías y cambios</Link></p>
+        <button type="button" className="product-description-toggle" aria-expanded={detailsExpanded} aria-controls={`${detailsId} ${extraDetailsId}`} onClick={() => setDetailsExpanded(value => !value)}>{detailsExpanded ? 'Ver menos' : 'Ver más detalles'}</button>
+        </div>
         <div className="product-purchase">{purchaseActions}{quantityInCart > 0 && <Link to="/carrito" className="product-cart-feedback">{quantityInCart} en tu carrito · Ver pedido <ArrowRight size={15} /></Link>}<p>Pide esta joya por WhatsApp o reúne varias en tu carrito.</p><span>No necesitas crear una cuenta.</span></div>
-        <details className="product-details" open><summary>Detalles que la hacen especial</summary><ul>{(product.features?.length ? product.features : [materialNames[product.material] || product.material]).map((feature, position) => <li key={`${feature}-${position}`}><Check size={16} /><span>{feature}</span></li>)}</ul></details>
+        <div id={extraDetailsId} className="product-extra-details">
+        <details className="product-details" open><summary>Detalles que la hacen especial</summary><ul>{(features.length ? features : [materialNames[product.material] || product.material]).map((feature, position) => <li key={`${feature}-${position}`}><Check size={16} /><span>{feature}</span></li>)}</ul></details>
         <details className="product-details"><summary>¿Cómo comprar tu joya?</summary><ol><li>Elige «Pedir» para consultar esta pieza o agrega varias al carrito y continúa por WhatsApp.</li><li>Confirmamos contigo disponibilidad, medidas y opciones de entrega.</li><li>Acordamos los detalles de pago y envío directamente contigo.</li></ol></details>
         <p className="product-reference">Referencia: {product.id}</p>
+        </div>
       </div>
     </section>
     {relatedProducts.length > 0 && (

@@ -51,7 +51,7 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
 
       <header className="catalog-intro">
         <div><p className="shop-eyebrow">NUESTRA COLECCIÓN</p><h1>Descubre nuestras piezas</h1></div>
-        <div className="catalog-intro-copy"><p>Aquí podrás descubrir todas nuestras prendas disponibles.</p><a href={buildWhatsAppLink('Hola, Alpez. Me gustaría recibir asesoría para elegir una joya.')} target="_blank" rel="noopener noreferrer">Te asesoramos por WhatsApp <ArrowRight size={16} /></a></div>
+        <div className="catalog-intro-copy"><p>Aquí podrás descubrir todas nuestras prendas disponibles.</p></div>
       </header>
       </>}
 
