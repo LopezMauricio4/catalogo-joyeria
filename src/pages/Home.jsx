@@ -104,15 +104,15 @@ const Home = ({ products, isLoading = false }) => {
 
         <div className="home-hero-content mx-auto flex w-full max-w-7xl items-center px-6 md:px-8">
           <div className="max-w-2xl space-y-8 text-center md:text-left">
-            <p className="luxury-eyebrow">Joyería fina</p>
+            <p className="luxury-eyebrow">Joyería Alpez</p>
             <h1 className="text-4xl font-light leading-[1.05] tracking-[-0.04em] text-ink md:text-6xl">
-              Elegancia en <span className="font-semibold text-forest-700">oro 18k</span>
+              Manejamos <span className="font-semibold text-forest-700">oro 18k</span>
               <br />
               y oro laminado 18k
             </h1>
             <p className="mx-auto max-w-xl text-lg leading-8 text-ink-muted md:mx-0">
-              Descubre piezas que equilibran estilo, brillo y valor. Nuestro catálogo está pensado para
-              inspirarte y ayudarte a elegir la joya perfecta por WhatsApp.
+              Explora nuestro catálogo y descubre todas nuestras prendas. Si tienes preguntas,
+              contáctanos a través de nuestras líneas de atención. Estamos para asesorarte.
             </p>
 
             <div className="flex flex-col justify-center gap-4 sm:flex-row md:justify-start">

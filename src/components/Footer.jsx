@@ -36,7 +36,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram de Alpez Joyería"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-ivory-soft/80 transition hover:border-gold-400 hover:text-gold-400"
+              className="flex h-10 w-10 items-center justify-center text-ivory-soft/80 transition hover:text-gold-400"
             >
               <SocialIcon type="instagram" />
             </a>
@@ -45,7 +45,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer"
               aria-label="Facebook de Alpez Joyería"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-ivory-soft/80 transition hover:border-gold-400 hover:text-gold-400"
+              className="flex h-10 w-10 items-center justify-center text-ivory-soft/80 transition hover:text-gold-400"
             >
               <SocialIcon type="facebook" />
             </a>
@@ -54,7 +54,7 @@ const Footer = () => {
               target="_blank"
               rel="noreferrer"
               aria-label="TikTok de Alpez Joyería"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-ivory-soft/80 transition hover:border-gold-400 hover:text-gold-400"
+              className="flex h-10 w-10 items-center justify-center text-ivory-soft/80 transition hover:text-gold-400"
             >
               <SocialIcon type="tiktok" />
             </a>
