@@ -6,10 +6,14 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.js": {
-      "includeFiles": "backend/{dist/**,package.json,node_modules/.prisma/client/**}"
+      "includeFiles": "{backend/{dist/**,package.json,node_modules/.prisma/client/**},dist/index.html}"
     }
   },
   "rewrites": [
+    {
+      "source": "/producto/:id",
+      "destination": "/api"
+    },
     {
       "source": "/api/:path*",
       "destination": "/api"

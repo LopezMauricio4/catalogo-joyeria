@@ -41,7 +41,7 @@ test('WhatsApp identifica pieza, material, precio COP y enlace, sin confirmar un
   assert.match(message, /Anillo Órbita/);
   assert.match(message, /Oro 18k/);
   assert.match(message, /COP/);
-  assert.match(message, /Referencia: a/);
+  assert.doesNotMatch(message, /Referencia:/);
   assert.match(message, /https:\/\/ejemplo.com\/producto\/a/);
   assert.match(message, /confirmas disponibilidad/);
 });

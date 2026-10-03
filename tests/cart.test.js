@@ -23,8 +23,7 @@ test('calcula subtotal con precios actuales y prepara todas las referencias para
   assert.equal(cartSubtotal(rows), 200000);
   const message = generateCartMessage(rows, 'https://alpez.example');
   assert.match(message, /Cantidad: 2/);
-  assert.match(message, /Referencia: a/);
-  assert.match(message, /Referencia: b/);
+  assert.doesNotMatch(message, /Referencia:/);
   assert.match(message, /precio por confirmar/);
   assert.match(message, /confirmas disponibilidad/);
   assert.match(message, /https:\/\/alpez.example\/producto\/a/);

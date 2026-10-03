@@ -8,7 +8,6 @@ export const generateCartMessage = (rows, origin = '') => [
     `\n${index + 1}. ${product.name} · ${materialNames[product.material] || product.material}`,
     `Cantidad: ${quantity}`,
     `Precio por unidad: ${formatPrice(product.price)}${product.price > 0 ? ' COP' : ''}`,
-    `Referencia: ${product.id}`,
     origin && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
   ].filter(Boolean).join('\n')),
   `\nSubtotal de piezas con precio: ${cartSubtotal(rows) > 0 ? `${formatPrice(cartSubtotal(rows))} COP` : 'Por confirmar'}.`,
@@ -30,7 +29,6 @@ export const generateProductMessage = (product, origin = '') => {
     `Hola, Alpez. Me interesa ${productName}.`,
     productMaterial && `Material: ${productMaterial}.`,
     product?.price > 0 && `Precio del catálogo: ${formatPrice(product.price)} COP.`,
-    product?.id && `Referencia: ${product.id}`,
     origin && product?.id && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
     '¿Me confirmas disponibilidad y opciones de entrega para hacer mi compra?',
   ].filter(Boolean).join('\n');
