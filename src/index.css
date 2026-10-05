@@ -1075,3 +1075,82 @@ p {
 .editor-image-drag:active { cursor:grabbing; }
 .editor-image-tile[draggable='true'] { cursor:grab; }
 .editor-image-open img { -webkit-user-drag:none; user-select:none; }
+
+.catalog-material-intro.catalog-intro { display:flex; flex-direction:column; align-items:flex-start; gap:20px; padding-block:24px; }
+.catalog-material-intro h1 { max-width:760px; font-size:clamp(32px,3.5vw,48px); line-height:1.1; }
+.catalog-material-intro .catalog-material-filter { width:100%; margin:0; }
+.catalog-material-intro .catalog-materials { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:560px; gap:12px; }
+.catalog-page .catalog-materials button[data-material='laminado'] { background:#eef4ee; border-color:#b9d1bf; color:#24543e; }
+.catalog-page .catalog-materials button[data-material='laminado'][aria-pressed='true'] { background:#24543e; border-color:#24543e; color:white; }
+@media(max-width:767px) {
+  .catalog-material-intro.catalog-intro { gap:16px; padding-block:18px; }
+  .catalog-material-intro h1 { font-size:32px; line-height:1.1; }
+  .catalog-material-intro .catalog-materials { gap:8px; }
+  .catalog-material-intro .catalog-materials button { font-size:13px; padding:10px 8px; }
+}
+
+/* Categorías debajo del material: navegación horizontal compacta. */
+.catalog-category-navigation { display:flex; align-items:center; gap:6px; min-width:0; border-top:1px solid var(--color-line-strong); border-bottom:1px solid var(--color-line-strong); }
+.catalog-category-navigation + .catalog-controls { border-top:0; }
+.catalog-category-navigation .catalog-categories { flex:1; min-width:0; gap:6px; padding-block:10px; overscroll-behavior-x:contain; scroll-snap-type:x proximity; }
+.catalog-category-navigation .catalog-categories button { scroll-snap-align:start; white-space:nowrap; padding:7px 13px; min-height:40px; font-size:12px; }
+.catalog-category-navigation .catalog-categories button[aria-pressed='true'] { background:#18342d; border-color:#18342d; color:#fffdf8; box-shadow:none; }
+.catalog-category-navigation .catalog-categories button:focus-visible { outline:2px solid #9b7b32; outline-offset:-2px; }
+.catalog-category-scroll { display:none; }
+@media(max-width:767px) {
+  .catalog-category-scroll { display:flex; align-items:center; justify-content:center; flex:0 0 26px; width:26px; height:36px; border:1px solid #d6ddd5; border-radius:6px; color:#405b50; background:#fffdf8; cursor:pointer; }
+  .catalog-category-navigation .catalog-categories { padding-block:8px; }
+  .catalog-category-navigation .catalog-categories button { padding-inline:11px; }
+}
+
+.catalog-page .catalog-filter-button,
+.catalog-page .catalog-sort select { border:0; border-radius:0; background:transparent; box-shadow:none; padding:6px 0; color:var(--color-forest-800); }
+.catalog-page .catalog-filter-button:hover,
+.catalog-page .catalog-sort select:hover { background:transparent; text-decoration:underline; text-underline-offset:4px; }
+.catalog-page .catalog-sort select { appearance:none; width:auto; max-width:150px; text-align:right; }
+.catalog-page .catalog-filter-button > span { width:auto; height:auto; border-radius:0; background:transparent; color:inherit; font-size:inherit; }
+.catalog-page .catalog-filter-button:focus-visible,
+.catalog-page .catalog-sort select:focus-visible { outline:2px solid #9b7b32; outline-offset:3px; }
+.catalog-page .catalog-toolbar-actions { gap:20px; }
+
+.catalog-page .catalog-filter-button { gap:5px; }
+.catalog-page .catalog-sort { position:relative; display:inline-flex; align-items:center; }
+.catalog-page .catalog-sort select { padding-right:19px; }
+.catalog-page .catalog-sort > svg { position:absolute; right:0; pointer-events:none; color:var(--color-forest-800); }
+
+.jewel-card[data-material] .jewel-card-info { position:relative; padding:9px 11px 10px; }
+.jewel-card h3 { font-size:20px; line-height:1.15; margin-block:3px 5px; }
+.jewel-card-price { font-size:13px; padding-right:20px; }
+.jewel-card-price > span { font-size:9px; }
+.jewel-card-action { position:absolute; right:10px; bottom:10px; margin:0; min-height:0; }
+@media(max-width:767px) {
+  .jewel-card[data-material] .jewel-card-info { padding:8px 9px 9px; }
+  .jewel-card h3 { font-size:17px; }
+  .jewel-card-price { font-size:12px; }
+  .jewel-card-material { font-size:8px; }
+  .jewel-card-action { right:8px; bottom:9px; }
+}
+
+.catalog-page.shop-shell { padding-inline:24px; }
+.catalog-page .shop-product-grid { gap:18px 14px; }
+@media(max-width:767px) {
+  .catalog-page.shop-shell { padding-inline:10px; }
+  .catalog-page .shop-product-grid { gap:14px 8px; }
+}
+
+.mobile-shop-menu.is-open { max-height:calc(100dvh - var(--mobile-menu-header-height,80px)); overflow-y:auto; overscroll-behavior:contain; padding-bottom:env(safe-area-inset-bottom); }
+.mobile-catalog-menu > summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:12px 16px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#173e32; cursor:pointer; list-style:none; }
+.mobile-catalog-menu summary::-webkit-details-marker { display:none; }
+.mobile-catalog-menu summary > svg { flex-shrink:0; transition:transform .18s ease; }
+.mobile-catalog-menu details[open] > summary > svg,
+.mobile-catalog-menu[open] > summary > svg { transform:rotate(180deg); }
+.mobile-catalog-materials { margin:2px 16px 8px; padding-left:12px; border-left:1px solid #d6ddd5; }
+.mobile-catalog-material > summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:10px 8px; font-size:12px; font-weight:600; cursor:pointer; list-style:none; }
+.mobile-catalog-material[data-material='oro-18k'] > summary { color:#8a651c; }
+.mobile-catalog-material[data-material='laminado'] > summary { color:#24543e; }
+.mobile-catalog-collections { display:grid; padding:0 0 8px 12px; }
+.mobile-catalog-collections a { display:block; padding:10px 8px; min-height:40px; font-size:13px; color:#536860; border-radius:5px; }
+.mobile-catalog-collections a[aria-current='page'] { color:#173e32; background:#edf1ea; font-weight:600; }
+.mobile-catalog-collections a:hover { background:#f4f6f1; }
+.mobile-catalog-menu :is(summary,a):focus-visible { outline:2px solid #9b7b32; outline-offset:-2px; border-radius:5px; }
+@media(prefers-reduced-motion:reduce) { .mobile-catalog-menu summary > svg { transition:none; } }

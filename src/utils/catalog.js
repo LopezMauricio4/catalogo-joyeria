@@ -7,6 +7,11 @@ export const readCatalogFilters = (params) => ({
   search: params.get('q') || '', sort: params.get('orden') || 'featured',
   min: params.get('min') || '', max: params.get('max') || '',
 });
+export const readCollectionFilters = params => {
+  const filters = readCatalogFilters(params);
+  return { ...filters, material: Object.hasOwn(materialNames, filters.material) ? filters.material : 'oro-18k' };
+};
+export const resetCollectionFilters = params => new URLSearchParams({ material: readCollectionFilters(params).material });
 export const validatePriceRange = (min, max) => {
   if ([min, max].some(value => value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 0))) return 'Escribe precios válidos, iguales o mayores a cero.';
   if (min !== '' && max !== '' && Number(min) > Number(max)) return 'El precio máximo debe ser mayor o igual al mínimo.';

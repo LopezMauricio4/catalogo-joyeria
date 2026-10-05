@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu as MenuIcon, Search, ShoppingCart, UserRound, X } from "lucide-react";
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
+import MobileCatalogMenu from './MobileCatalogMenu';
 
 const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,7 +62,8 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
     const closeEmptySearch = isSearchOpen && isSearchEmpty;
     if (!isOpen && !isAccountOpen && !closeEmptySearch) return undefined;
 
-    const closeOnUserScroll = () => {
+    const closeOnUserScroll = event => {
+      if (event.target instanceof Element && event.target.closest('#mobile-menu')) return;
       setIsOpen(false);
       setIsAccountOpen(false);
       if (closeEmptySearch) setSearchOpen(false);
@@ -286,8 +288,9 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
         id="mobile-menu"
         inert={!isOpen}
         aria-hidden={!isOpen}
-        className={`absolute left-0 right-0 top-full overflow-hidden border-t border-line bg-white shadow-[0_18px_30px_rgba(11,37,27,0.08)] transition-[max-height] duration-300 ease-luxury lg:hidden ${
-          isOpen ? "max-h-144" : "max-h-0"
+        style={{ '--mobile-menu-header-height': `${isScrolled ? 64 : 80}px` }}
+        className={`mobile-shop-menu absolute left-0 right-0 top-full overflow-hidden border-t border-line bg-white shadow-[0_18px_30px_rgba(11,37,27,0.08)] transition-[max-height] duration-300 ease-luxury lg:hidden ${
+          isOpen ? "is-open" : "max-h-0"
         }`}
       >
         <nav className="flex flex-col gap-1 px-4 py-4 sm:px-6">
@@ -298,30 +301,8 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
           >
             Inicio
           </Link>
-          <Link
-            to="/catalogo"
-            onClick={() => setIsOpen(false)}
-            className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-          >
-            Catálogo
-          </Link>
-
+          <MobileCatalogMenu onNavigate={() => setIsOpen(false)} />
           <div className="my-2 h-px bg-forest-100" />
-
-          <Link
-            to="/catalogo?material=oro-18k"
-            onClick={() => setIsOpen(false)}
-            className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-          >
-            Oro 18k
-          </Link>
-          <Link
-            to="/catalogo?material=laminado"
-            onClick={() => setIsOpen(false)}
-            className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-          >
-            Oro Laminado 18k
-          </Link>
           <Link
             to="/garantias-y-cambios"
             onClick={() => setIsOpen(false)}
