@@ -122,6 +122,13 @@ img {
   max-width: 100%;
 }
 
+/* Keep iPhone HDR photos at standard brightness in the catalog and upload preview.
+   Browsers without support ignore this property; the original files stay intact. */
+.product-photo,
+.editor-image-open img {
+  dynamic-range-limit: standard;
+}
+
 button,
 a {
   transition: all 0.25s var(--ease-luxury);
