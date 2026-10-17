@@ -1,5 +1,5 @@
 import { WhatsAppIcon } from '../components/SocialIcon';
-import { useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ShieldCheck, ShoppingCart, ZoomIn } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import JewelryCard from '../components/JewelryCard';
@@ -10,6 +10,7 @@ import { formatPrice, materialNames } from '../utils/catalog';
 import { buildWhatsAppLink, generateProductMessage } from '../utils/whatsappGenerator';
 import { stockLimit } from '../utils/cart';
 import { readProductDisclosure } from '../utils/productDisclosure';
+import { categories } from '../data/mockProducts';
 
 function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const disclosure = readProductDisclosure(product.features);
@@ -20,18 +21,30 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const detailsId = useId();
   const extraDetailsId = useId();
+  const purchaseRef = useRef(null);
+  const [showMobilePurchase, setShowMobilePurchase] = useState(false);
   const touch = useRef(null);
   const images = [...new Set([product.image, ...(product.images || [])].filter(Boolean))];
   const index = Math.min(selected, Math.max(0, images.length - 1));
 
   const whatsappLink = buildWhatsAppLink(generateProductMessage(product, window.location.origin));
   const move = direction => setSelected(current => (current + direction + images.length) % images.length);
-  const label = 'Pedir';
+  const label = 'Consultar por WhatsApp';
+  const category = categories.find(item => item.key === product.category);
+  const categoryUrl = `/catalogo?${new URLSearchParams({ material: product.material, categoria: product.category })}`;
+  const description = product.description?.trim();
+  const meaningfulDescription = description && description.toLocaleLowerCase('es') !== (materialNames[product.material] || '').toLocaleLowerCase('es');
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => setShowMobilePurchase(!entry.isIntersecting));
+    if (purchaseRef.current) observer.observe(purchaseRef.current);
+    return () => observer.disconnect();
+  }, []);
   const quantityInCart = cart.items.find(item => item.id === String(product.id))?.quantity || 0;
   const atLimit = quantityInCart >= stockLimit(product);
   const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{<button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
   return <div className="product-page shop-shell">
     <Link className="product-back" to={catalogReturn}><ArrowLeft size={17} />Volver a las piezas</Link>
+    <nav className="product-breadcrumb" aria-label="Ruta de navegación"><Link to="/catalogo">Catálogo</Link><span aria-hidden="true">/</span><Link to={categoryUrl}>{category?.label || 'Piezas'}</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span></nav>
     <section className="product-layout" aria-label={product.name}>
       <div className={`product-gallery${images.length > 1 ? ' has-thumbnails' : ''}`}>
         <div className="product-main-photo" onTouchStart={event => { touch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }} onTouchEnd={event => {
@@ -49,7 +62,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
       </div>
       <div className={`product-story${detailsExpanded ? ' is-details-expanded' : ''}`}><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p><p className="shop-eyebrow product-material-label" data-material={product.material}>{materialNames[product.material] || product.material}</p></div>
         <div id={detailsId} className="product-information">
-        <div className="product-description-block"><p className="product-description">{product.description || 'Conoce todos los detalles de esta pieza con nuestra asesoría personalizada.'}</p></div>
+        {meaningfulDescription && <div className="product-description-block"><p className="product-description">{description}</p></div>}
         <dl className="product-disclosure"><div><dt>Material</dt><dd>{disclosure.composition || materialNames[product.material] || product.material}</dd></div>{hasMeasurements && <div><dt>Medidas y tallas</dt><dd>{disclosure.measurements || 'Solicita las medidas de esta pieza antes de confirmar tu compra.'}</dd></div>}</dl>
         <p className="product-legal-note">El envío se informa por separado y se acuerda el total antes de confirmar la compra por WhatsApp.</p>
         <section className="product-warranty" aria-label="Garantía de la prenda">
@@ -61,14 +74,15 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
         <p className="product-legal-links product-warranty-link"><span>Conoce más en</span> <Link to="/garantias-y-cambios">Garantías y cambios</Link></p>
         <button type="button" className="product-description-toggle" aria-expanded={detailsExpanded} aria-controls={`${detailsId} ${extraDetailsId}`} onClick={() => setDetailsExpanded(value => !value)}>{detailsExpanded ? 'Ver menos' : 'Ver más detalles'}</button>
         </div>
-        <div className="product-purchase">{purchaseActions}{quantityInCart > 0 && <Link to="/carrito" className="product-cart-feedback">{quantityInCart} en tu carrito · Ver pedido <ArrowRight size={15} /></Link>}<p>Pide esta joya por WhatsApp o reúne varias en tu carrito.</p><span>No necesitas crear una cuenta.</span></div>
+        <div className="product-purchase" ref={purchaseRef}>{purchaseActions}{quantityInCart > 0 && <Link to="/carrito" className="product-cart-feedback">{quantityInCart} en tu carrito · Ver pedido <ArrowRight size={15} /></Link>}<p>Consulta esta joya o reúne varias en tu carrito.</p><span>No necesitas crear una cuenta.</span></div>
         <div id={extraDetailsId} className="product-extra-details">
         <details className="product-details" open><summary>Detalles que la hacen especial</summary><ul>{(features.length ? features : [materialNames[product.material] || product.material]).map((feature, position) => <li key={`${feature}-${position}`}><Check size={16} /><span>{feature}</span></li>)}</ul></details>
-        <details className="product-details"><summary>¿Cómo comprar tu joya?</summary><ol><li>Elige «Pedir» para consultar esta pieza o agrega varias al carrito y continúa por WhatsApp.</li><li>Confirmamos contigo disponibilidad, medidas y opciones de entrega.</li><li>Acordamos los detalles de pago y envío directamente contigo.</li></ol></details>
+        <details className="product-details"><summary>¿Cómo comprar tu joya?</summary><ol><li>Elige «Consultar por WhatsApp» para consultar esta pieza o agrega varias al carrito.</li><li>Confirmamos contigo disponibilidad, medidas y opciones de entrega.</li><li>Acordamos los detalles de pago y envío directamente contigo.</li></ol></details>
         <p className="product-reference">Referencia: {product.id}</p>
         </div>
       </div>
     </section>
+    {showMobilePurchase && !zoom && <aside className="product-quick-purchase" aria-label="Consultar esta joya"><div><span>{product.name}</span><strong>{formatPrice(product.price)}{product.price > 0 && <small> COP</small>}</strong></div><a href={whatsappLink} className="shop-button" target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={17} />Consultar</a></aside>}
     {relatedProducts.length > 0 && (
       <section className="product-related" aria-label="También te puede interesar">
         <div className="product-related-heading">

@@ -4,6 +4,7 @@ import { Menu as MenuIcon, Search, ShoppingCart, UserRound, X } from "lucide-rea
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
 import MobileCatalogMenu from './MobileCatalogMenu';
+import { catalogSearchParams } from '../utils/catalog';
 
 const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +20,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
     setIsAccountOpen(false);
     setIsHiddenOnScroll(false);
     setSearchOpen(!isSearchOpen);
-    if (!isSearchOpen && location.pathname !== '/catalogo') navigate('/catalogo');
+    if (!isSearchOpen) navigate({ pathname: '/catalogo', search: catalogSearchParams(new URLSearchParams(location.search).get('q') || '').toString() });
   };
   const closeSearch = () => {
     setSearchOpen(false);
@@ -29,6 +30,33 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
   const [isHiddenOnScroll, setIsHiddenOnScroll] = useState(false);
   const lastScrollY = useRef(window.scrollY);
   const headerRef = useRef(null);
+  const menuTrigger = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const header = headerRef.current;
+    const trigger = menuTrigger.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const keepFocus = event => {
+      if (event.key !== 'Tab') return;
+      const controls = [...header.querySelectorAll('a, button, input, select')].filter(element => element.getClientRects().length && !element.closest('[inert]'));
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    const closeOnDesktop = () => { if (window.innerWidth >= 1024) setIsOpen(false); };
+    document.addEventListener('keydown', keepFocus);
+    window.addEventListener('resize', closeOnDesktop);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', keepFocus);
+      window.removeEventListener('resize', closeOnDesktop);
+      // Navigation focuses the new page; closing in place returns to the menu button.
+      if (document.activeElement === document.body || header.contains(document.activeElement)) trigger?.focus();
+    };
+  }, [isOpen]);
 
   const isLoggedIn = user && user.role !== "guest";
   const searchButton = <button type="button" className="shop-icon-button text-ink-soft" aria-label="Buscar joyas" aria-expanded={isSearchOpen} aria-controls="header-search" onClick={toggleSearch}><Search size={20} strokeWidth={1.8} /></button>;
@@ -100,6 +128,8 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
   }, []);
 
   return (
+    <>
+    {isOpen && <button className="mobile-menu-backdrop" type="button" tabIndex={-1} aria-label="Cerrar menú de navegación" onClick={() => setIsOpen(false)} />}
     <header
       ref={headerRef}
       className={`sticky top-0 z-50 border-b bg-ivory-soft/90 backdrop-blur-md transition-all duration-300 ${
@@ -117,6 +147,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
           <div className="flex w-full items-center justify-between lg:hidden">
             <div className="flex items-center gap-1">
             <button
+              ref={menuTrigger}
               type="button"
               onClick={toggleMobileMenu}
               className="flex h-11 w-11 items-center justify-center text-ink-soft focus:outline-none"
@@ -347,6 +378,7 @@ const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) =>
         </nav>
       </div>
     </header>
+    </>
   );
 };
 

@@ -1,6 +1,6 @@
 import { WhatsAppIcon } from '../components/SocialIcon';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight, Funnel, Search, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Funnel, Search, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import JewelryCard from '../components/JewelryCard';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
@@ -17,14 +17,6 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
   useDocumentMeta({ title: 'Catálogo', description: 'Descubre joyas en oro 18k y oro laminado. Elige tu pieza y recibe asesoría para comprar por WhatsApp.' });
   const [params, setParams] = useSearchParams();
   const filters = readCollectionFilters(params);
-  useEffect(() => {
-    if (params.get('material') === filters.material) return;
-    setParams(current => {
-      const next = new URLSearchParams(current);
-      next.set('material', filters.material);
-      return next;
-    }, { replace: true });
-  }, [params, setParams, filters.material]);
   const [showFilters, setShowFilters] = useState(false);
   const [draft, setDraft] = useState({ min: '', max: '' });
   const [draftError, setDraftError] = useState('');
@@ -47,13 +39,13 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
     update({ min: draft.min, max: draft.max, disponible: '' });
     setShowFilters(false);
   };
-  const materialPicker = <fieldset className="catalog-material-filter"><legend className="sr-only">Elige el material de tu prenda</legend><div className="catalog-materials">{Object.entries(materialNames).map(([value, label]) => <button key={value} type="button" data-material={value} aria-pressed={filters.material === value} onClick={() => update({ material: value })}><Check size={16} aria-hidden="true" /><span>{label}</span></button>)}</div></fieldset>;
+  const materialPicker = <fieldset className="catalog-material-filter"><legend className="sr-only">Filtrar por material</legend><div className="catalog-materials">{Object.entries({ '': 'Todos', ...materialNames }).map(([value, label]) => <button key={value} type="button" data-material={value} aria-pressed={filters.material === value} onClick={() => update({ material: value })}><span>{label}</span></button>)}</div></fieldset>;
   return (
     <div className="catalog-page shop-shell">
       {isSearching && <h1 className="sr-only">Buscar joyas</h1>}
       {!isSearching && <>
       <header className="catalog-intro catalog-material-intro">
-        <div><p className="shop-eyebrow">NUESTRA COLECCIÓN</p><h1>¿Qué material buscas para tu prenda?</h1></div>
+        <div><p className="shop-eyebrow">NUESTRA COLECCIÓN</p><h1 className="sr-only">Catálogo de joyas</h1></div>
         {materialPicker}
       </header>
       </>}

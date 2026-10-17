@@ -1,8 +1,7 @@
-import { WhatsAppIcon } from '../components/SocialIcon';
-import { ArrowRight, Eye, Quote } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowRight, MessageCircle, Package, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import JewelryCard from "../components/JewelryCard";
+import ProductImage from "../components/ProductImage";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import Reveal from "../components/Reveal";
 import useDocumentMeta from "../hooks/useDocumentMeta";
@@ -33,22 +32,12 @@ const CategoryCard = ({ category, products }) => {
   const availableProducts = products.filter(
     (product) => product.category === category.key,
   );
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (availableProducts.length < 2) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveIndex((index) => (index + 1) % availableProducts.length);
-    }, 3500);
-    return () => window.clearInterval(timer);
-  }, [availableProducts.length]);
-
-  const activeProduct = availableProducts[activeIndex % Math.max(availableProducts.length, 1)];
+  const activeProduct = availableProducts[0];
 
   return (
     <Link to={`/catalogo?categoria=${category.key}`} className="category-card group">
       {activeProduct ? (
-        <img
+        <ProductImage
           key={activeProduct.id}
           src={activeProduct.image}
           alt={`${category.label}: ${activeProduct.name}`}
@@ -62,16 +51,10 @@ const CategoryCard = ({ category, products }) => {
         <span className="category-card-label">{category.label}</span>
         <span className="category-card-action">
           Explorar
-          <Eye className="h-3 w-3" />
+          <ArrowRight className="h-3 w-3" />
         </span>
       </span>
-      {availableProducts.length > 1 && (
-        <span className="category-card-dots" aria-label={`${availableProducts.length} productos disponibles`}>
-          {availableProducts.map((product, index) => (
-            <span key={product.id} className={index === activeIndex % availableProducts.length ? "is-active" : ""} />
-          ))}
-        </span>
-      )}
+      {availableProducts.length > 0 && <span className="category-card-count">{availableProducts.length} {availableProducts.length === 1 ? 'pieza' : 'piezas'}</span>}
     </Link>
   );
 };
@@ -90,38 +73,27 @@ const Home = ({ products, isLoading = false }) => {
   return (
     <div className="home-storefront bg-ivory text-ink-soft">
       {/* Hero */}
-      <section className="home-hero-screen relative isolate overflow-hidden border-b border-line bg-ivory">
-        <div className="absolute inset-0 -z-10">
-          <img
+      <section className="home-hero-screen">
+        <div className="home-hero-visual">
+          <ProductImage
             src="/images/inicio-alpez.webp"
-            alt=""
-            aria-hidden="true"
-            className="h-full w-full scale-110 object-cover object-[68%_center] blur-[1px] md:object-[72%_center]"
+            alt="Detalle de una joya Alpez con balines dorados"
+            eager
           />
-          <div className="absolute inset-0 bg-ivory/35" />
-          <div className="absolute inset-y-0 left-0 w-full bg-linear-to-r from-ivory via-ivory/90 to-ivory/15 backdrop-blur-[2px] md:w-[68%] md:from-ivory md:via-ivory/90 md:to-transparent" />
         </div>
 
-        <div className="home-hero-content mx-auto flex w-full max-w-7xl items-center px-6 md:px-8">
-          <div className="max-w-2xl space-y-8 text-center md:text-left">
+        <div className="home-hero-content">
+          <div className="home-hero-copy">
             <p className="luxury-eyebrow">Joyería Alpez</p>
-            <h1 className="text-4xl font-light leading-[1.05] tracking-[-0.04em] text-ink md:text-6xl">
-              Manejamos <span className="font-semibold text-forest-700">oro 18k</span>
-              <br />
-              y oro laminado 18k
-            </h1>
-            <p className="mx-auto max-w-xl text-lg leading-8 text-ink-muted md:mx-0">
-              Explora nuestro catálogo y descubre todas nuestras prendas. Si tienes preguntas,
-              contáctanos a través de nuestras líneas de atención. Estamos para asesorarte.
-            </p>
+            <h1>Una joya para<br />cada momento.</h1>
+            <p>Descubre nuestras piezas en oro 18k y oro laminado. Encuentra la que va contigo.</p>
 
-            <div className="flex flex-col justify-center gap-4 sm:flex-row md:justify-start">
+            <div className="home-hero-actions">
               <Link to="/catalogo" className="luxury-btn luxury-btn-primary">
                 Explorar catálogo
               </Link>
-              <a href={whatsappLink} target="_blank" rel="noreferrer" className="luxury-btn luxury-btn-secondary">
-                Asesoría WhatsApp
-                <WhatsAppIcon className="h-4 w-4 text-forest-600" />
+              <a href={whatsappLink} target="_blank" rel="noreferrer" className="shop-text-link">
+                Asesoría personalizada <ArrowRight size={16} />
               </a>
             </div>
           </div>
@@ -149,42 +121,26 @@ const Home = ({ products, isLoading = false }) => {
         </div>
       </Reveal>
 
-      {/* Categorías */}
-      <Reveal as="section" className="bg-stone py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-12 text-center">
-            <p className="luxury-eyebrow">Categorías</p>
-            <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Encuentra tu estilo</h2>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-            {categories.map((category) => (
-              <CategoryCard key={category.key} category={category} products={products} />
-            ))}
-          </div>
-        </div>
-      </Reveal>
-
       {/* Destacados */}
-      <Reveal as="section" className="mx-auto max-w-7xl px-6 py-20">
+      <Reveal as="section" className="home-featured mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 flex items-center justify-between gap-4">
           <div>
             <p className="luxury-eyebrow">Destacados</p>
             <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Nuestras favoritas</h2>
           </div>
-          <Link to="/catalogo" className="hidden text-xs uppercase tracking-[0.2em] text-ink-soft md:inline-flex">
-            Ver todo
+          <Link to="/catalogo" className="shop-text-link">
+            Ver todo <ArrowRight size={15} />
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <ProductCardSkeleton key={index} />
             ))}
           </div>
         ) : showcaseProducts.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
             {showcaseProducts.map((product) => (
               <JewelryCard key={product.id} product={product} />
             ))}
@@ -196,19 +152,28 @@ const Home = ({ products, isLoading = false }) => {
         )}
       </Reveal>
 
-      {/* Publicar aquí únicamente testimonios reales con autorización del cliente. */}
-      <Reveal as="section" className="customer-reviews mx-auto max-w-7xl px-6 py-20">
-        <div className="customer-reviews-panel">
-          <div className="customer-reviews-symbol" aria-hidden="true"><Quote size={32} strokeWidth={1.2} /></div>
-          <div className="customer-reviews-copy">
-            <p className="luxury-eyebrow">Experiencias Alpez</p>
-            <h2>Tu experiencia cuenta</h2>
-            <p>¿Ya tienes una joya de Alpez? Nos encantará saber cómo fue tu experiencia y qué hace especial tu pieza.</p>
+      {/* Categorías */}
+      <Reveal as="section" className="home-categories bg-stone py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 text-center">
+            <p className="luxury-eyebrow">Categorías</p>
+            <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Encuentra tu estilo</h2>
           </div>
-          <div className="customer-reviews-action">
-            <a href={buildWhatsAppLink('Hola, Alpez. Ya compré una joya y me gustaría compartir mi experiencia: ')} target="_blank" rel="noopener noreferrer" className="shop-button"><WhatsAppIcon size={18} />Compartir mi experiencia</a>
-            <p>Conversemos por WhatsApp.<br />Tu opinión nos ayuda a mejorar.</p>
+
+          <div className="home-category-grid">
+            {categories.filter(category => products.some(product => product.category === category.key)).map((category) => (
+              <CategoryCard key={category.key} category={category} products={products} />
+            ))}
           </div>
+        </div>
+      </Reveal>
+
+      <Reveal as="section" className="home-service-section mx-auto max-w-7xl px-6 py-20">
+        <div className="home-material-heading"><p className="luxury-eyebrow">TE ACOMPAÑAMOS</p><h2>Elige con confianza</h2></div>
+        <div className="home-services">
+          <article><MessageCircle size={24} strokeWidth={1.3} /><h3>Atención personal</h3><p>Te ayudamos a elegir y confirmamos disponibilidad por WhatsApp.</p><a href={whatsappLink} target="_blank" rel="noreferrer">Hablar con Alpez <ArrowRight size={14} /></a></article>
+          <article><ShieldCheck size={24} strokeWidth={1.3} /><h3>Garantía de tu pieza</h3><p>Consulta la cobertura y los cuidados según el material de tu joya.</p><Link to="/garantias-y-cambios">Conocer la garantía <ArrowRight size={14} /></Link></article>
+          <article><Package size={24} strokeWidth={1.3} /><h3>Entrega coordinada</h3><p>Acordamos contigo las opciones de entrega y el total antes de confirmar.</p><a href={buildWhatsAppLink('Hola, Alpez. Quisiera conocer las opciones de entrega para mi pedido.')} target="_blank" rel="noreferrer">Consultar entrega <ArrowRight size={14} /></a></article>
         </div>
       </Reveal>
 

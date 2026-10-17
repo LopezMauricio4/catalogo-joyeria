@@ -9,9 +9,13 @@ export const readCatalogFilters = (params) => ({
 });
 export const readCollectionFilters = params => {
   const filters = readCatalogFilters(params);
-  return { ...filters, material: Object.hasOwn(materialNames, filters.material) ? filters.material : 'oro-18k' };
+  return { ...filters, material: Object.hasOwn(materialNames, filters.material) ? filters.material : '' };
 };
-export const resetCollectionFilters = params => new URLSearchParams({ material: readCollectionFilters(params).material });
+export const resetCollectionFilters = params => {
+  const { material } = readCollectionFilters(params);
+  return new URLSearchParams(material ? { material } : {});
+};
+export const catalogSearchParams = query => new URLSearchParams(query ? { q: query } : {});
 export const validatePriceRange = (min, max) => {
   if ([min, max].some(value => value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 0))) return 'Escribe precios válidos, iguales o mayores a cero.';
   if (min !== '' && max !== '' && Number(min) > Number(max)) return 'El precio máximo debe ser mayor o igual al mínimo.';

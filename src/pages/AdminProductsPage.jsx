@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Pencil, Eye, EyeOff, Trash2, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
@@ -25,6 +25,13 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
   const [busy, setBusy] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const actionLock = useRef(false);
+  const listScroll = useRef(0);
+  const previousView = useRef(view);
+  useLayoutEffect(() => {
+    if (view === 'editor') window.scrollTo({ top: 0, behavior: 'instant' });
+    else if (previousView.current === 'editor') window.scrollTo({ top: listScroll.current, behavior: 'instant' });
+    previousView.current = view;
+  }, [view]);
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -42,7 +49,7 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
   const replaceProduct = saved => setProducts(items => items.some(item => item.id === saved.id)
     ? items.map(item => item.id === saved.id ? saved : item) : [saved, ...items]);
   const browse = selected => { setFilter(selected); setView('products'); };
-  const edit = product => { setEditing(product); setView('editor'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const edit = product => { listScroll.current = window.scrollY; setEditing(product); setView('editor'); };
   const mutate = async operation => {
     if (actionLock.current) return;
     actionLock.current = true; setBusy(true);
@@ -63,7 +70,6 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
   if (view === 'editor') return <ProductEditor key={editing?.id || 'new'} product={editing}
     onSaveProduct={async (payload, id) => {
       replaceProduct(await onSaveProduct(payload, id));
-      setFilter('all'); setSearch(''); setMaterial(''); setCategory('');
     }} onCancel={() => setView('products')} />;
   return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <AdminNavigation />
