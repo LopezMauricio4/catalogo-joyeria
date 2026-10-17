@@ -3,7 +3,7 @@ import { cartSubtotal } from './cart.js';
 import { business } from '../data/legal.js';
 
 export const generateCartMessage = (rows, origin = '') => [
-  'Hola, Alpez. Quisiera pedir estas joyas:',
+  'Hola, quisiera pedir estas joyas:',
   ...rows.map(({ product, quantity }, index) => [
     `\n${index + 1}. ${product.name} · ${materialNames[product.material] || product.material}`,
     `Cantidad: ${quantity}`,
@@ -26,7 +26,7 @@ export const generateProductMessage = (product, origin = '') => {
   const productName = product?.name ?? 'pieza de joyería';
   const productMaterial = materialNames[product?.material] || product?.material || '';
   return [
-    `Hola, Alpez. Me interesa ${productName}.`,
+    `Hola, me interesa ${productName}.`,
     productMaterial && `Material: ${productMaterial}.`,
     product?.price > 0 && `Precio del catálogo: ${formatPrice(product.price)} COP.`,
     origin && product?.id && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
