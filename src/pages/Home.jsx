@@ -179,8 +179,10 @@ const Home = ({ products, isLoading = false }) => {
         </div>
       </Reveal>
 
-      <InstagramProfile />
-      <TikTokProfile />
+      <div className="social-profiles">
+        <InstagramProfile />
+        <TikTokProfile />
+      </div>
 
     </div>
   );

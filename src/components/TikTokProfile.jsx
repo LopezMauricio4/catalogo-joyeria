@@ -1,51 +1,71 @@
-import { useEffect, useRef } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, Play } from 'lucide-react';
 import SocialIcon from './SocialIcon';
+import { readTikTokPlayerState, tikTokProfileUrl, tikTokVideos } from '../utils/tiktok';
 
-const profileUrl = 'https://www.tiktok.com/@alpez.joyeria';
+function VideoPreview({ video }) {
+  const container = useRef(null);
+  const frame = useRef(null);
+  const [active, setActive] = useState(false);
+  const [status, setStatus] = useState('loading');
 
-export default function TikTokProfile() {
-  const preview = useRef(null);
   useEffect(() => {
-    const container = preview.current;
-    // TikTok owns the contents of this container so React never reconciles its embed.
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return;
-      observer.disconnect();
-      const quote = document.createElement('blockquote');
-      quote.className = 'tiktok-embed';
-      quote.setAttribute('cite', profileUrl);
-      quote.setAttribute('data-unique-id', 'alpez.joyeria');
-      quote.setAttribute('data-embed-type', 'creator');
-      quote.setAttribute('data-embed-from', 'oembed');
-      const section = document.createElement('section');
-      const link = document.createElement('a');
-      link.href = profileUrl;
-      link.textContent = '@alpez.joyeria';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      section.append(link);
-      quote.append(section);
-      const script = document.createElement('script');
-      script.src = 'https://www.tiktok.com/embed.js';
-      script.async = true;
-      container.append(quote, script);
+      if (entry.isIntersecting) { setActive(true); observer.disconnect(); }
     }, { rootMargin: '300px' });
-    observer.observe(container);
-    return () => { observer.disconnect(); container.replaceChildren(); };
+    observer.observe(container.current);
+    return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (!active) return;
+    const timer = window.setTimeout(() => setStatus('unavailable'), 12000);
+    const receive = event => {
+      const next = readTikTokPlayerState(event, frame.current?.contentWindow);
+      if (!next) return;
+      window.clearTimeout(timer);
+      setStatus(next);
+    };
+    window.addEventListener('message', receive);
+    return () => { window.clearTimeout(timer); window.removeEventListener('message', receive); };
+  }, [active]);
+
+  const videoUrl = `${tikTokProfileUrl}/video/${video.id}`;
+  return <div ref={container} className="tiktok-video-card">
+    <div className="tiktok-video-stage" data-state={status} aria-busy={active && status === 'loading'}>
+      {active && <iframe ref={frame}
+        src={`https://www.tiktok.com/player/v1/${video.id}?autoplay=0&rel=0&description=1`}
+        title={`${video.label} de Alpez en TikTok`} allow="fullscreen" allowFullScreen
+        className={status === 'ready' ? 'is-ready' : ''}
+        tabIndex={status === 'ready' ? 0 : -1} aria-hidden={status !== 'ready'}
+        onError={() => setStatus('unavailable')} />}
+      {status !== 'ready' && <div className="tiktok-video-fallback">
+        <SocialIcon type="tiktok" size={42} />
+        <span className="shop-eyebrow">ALPEZ EN TIKTOK</span>
+        <h3>Nuestras joyas en movimiento</h3>
+        <p role="status">{status === 'loading' ? 'Preparando la vista previa… También puedes abrir el video en TikTok.' : 'La vista previa no está disponible en este momento. Puedes ver el video directamente en TikTok.'}</p>
+        <a className="shop-button" href={videoUrl} target="_blank" rel="noopener noreferrer"><Play size={16} aria-hidden="true" />Ver video en TikTok</a>
+      </div>}
+    </div>
+    <a className="tiktok-video-link" href={videoUrl} target="_blank" rel="noopener noreferrer">Ver este video en TikTok <ArrowUpRight size={15} aria-hidden="true" /></a>
+  </div>;
+}
+
+export default function TikTokProfile() {
+  const [selected, setSelected] = useState(0);
   return <section className="instagram-section tiktok-section" aria-labelledby="tiktok-heading">
     <div className="instagram-layout mx-auto max-w-7xl">
       <div className="instagram-copy">
         <p className="luxury-eyebrow"><SocialIcon type="tiktok" size={20} />SÍGUENOS EN TIKTOK</p>
         <h2 id="tiktok-heading">@alpez.joyeria</h2>
         <p>Conoce nuestras joyas en movimiento y descubre los videos de Alpez.</p>
-        <a className="shop-text-link" href={profileUrl} target="_blank" rel="noopener noreferrer">Ver perfil en TikTok <ArrowUpRight size={16} aria-hidden="true" /></a>
+        <a className="shop-text-link" href={tikTokProfileUrl} target="_blank" rel="noopener noreferrer">Ver perfil en TikTok <ArrowUpRight size={16} aria-hidden="true" /></a>
       </div>
       <div className="tiktok-preview">
-        <div ref={preview} className="tiktok-embed-container" />
-        <p>Si la vista previa no aparece, <a href={profileUrl} target="_blank" rel="noopener noreferrer">abre nuestro perfil en TikTok</a>.</p>
+        <div className="tiktok-video-picker" role="group" aria-label="Elegir video de Alpez">
+          {tikTokVideos.map((video, index) => <button key={video.id} type="button" aria-pressed={selected === index} onClick={() => setSelected(index)}>{video.label}</button>)}
+        </div>
+        <VideoPreview key={tikTokVideos[selected].id} video={tikTokVideos[selected]} />
       </div>
     </div>
   </section>;

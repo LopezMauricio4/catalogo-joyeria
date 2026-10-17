@@ -1177,11 +1177,29 @@ p {
 .instagram-preview > p a { text-decoration:underline; text-underline-offset:3px; }
 .tiktok-section { border-top:1px solid var(--color-line); }
 .tiktok-preview { min-width:0; }
-.tiktok-embed-container { min-height:360px; }
-.tiktok-embed-container .tiktok-embed { width:100%; max-width:100%; min-width:0; margin:0; }
-.tiktok-embed-container iframe { max-width:100%; }
-.tiktok-preview > p { margin-top:12px; font-size:12px; line-height:1.6; color:var(--color-ink-muted); }
-.tiktok-preview > p a { text-decoration:underline; text-underline-offset:3px; }
+.tiktok-video-picker { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.tiktok-video-picker button { min-height:36px; padding:7px 14px; border:1px solid var(--color-line-strong); border-radius:5px; font-size:12px; color:var(--color-ink-muted); cursor:pointer; }
+.tiktok-video-picker button[aria-pressed='true'] { background:var(--color-forest-800); border-color:var(--color-forest-800); color:white; }
+.tiktok-video-picker button:focus-visible { outline:2px solid var(--color-gold-600); outline-offset:3px; }
+.tiktok-video-stage { position:relative; min-height:420px; height:540px; overflow:hidden; border:1px solid var(--color-line-strong); border-radius:6px; background:var(--color-ivory-soft); }
+/* A cross-origin error page can still fire load. Reveal only after TikTok's
+   verified onPlayerReady message, never on iframe load alone. */
+.tiktok-video-stage iframe { position:absolute; inset:0; width:100%; height:100%; border:0; opacity:0; pointer-events:none; }
+.tiktok-video-stage iframe.is-ready { opacity:1; pointer-events:auto; }
+.tiktok-video-fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:28px; text-align:center; background:linear-gradient(145deg,#fffdfb,#edf1eb); }
+.tiktok-video-fallback h3 { max-width:280px; font-size:32px; line-height:1.1; }
+.tiktok-video-fallback p { max-width:300px; font-size:13px; line-height:1.8; color:var(--color-ink-muted); }
+.tiktok-video-fallback .shop-button { min-height:44px; padding:10px 16px; font-size:12px; }
+.tiktok-video-link { display:inline-flex; align-items:center; gap:6px; min-height:44px; font-size:12px; text-decoration:underline; text-underline-offset:3px; color:var(--color-ink-muted); }
+@media(min-width:1024px) {
+  .social-profiles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:48px; max-width:1440px; margin-inline:auto; padding:64px 32px; }
+  .social-profiles .instagram-section { min-width:0; padding:0; border:0; background:transparent; }
+  .social-profiles .instagram-layout { grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
+  .social-profiles .instagram-copy { min-height:220px; }
+  .social-profiles .instagram-copy h2 { margin-block:14px; font-size:36px; }
+  .social-profiles .instagram-copy > p:not(.luxury-eyebrow) { max-width:440px; }
+  .social-profiles .instagram-copy > a { margin-top:10px; }
+}
 @media(min-width:1024px) { .mobile-menu-backdrop { display:none; } }
 @media(max-width:767px) {
   .instagram-section { padding-inline:18px; }
