@@ -2,6 +2,8 @@ import { ArrowRight, MessageCircle, Package, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import JewelryCard from "../components/JewelryCard";
 import ProductImage from "../components/ProductImage";
+import InstagramProfile from '../components/InstagramProfile';
+import TikTokProfile from '../components/TikTokProfile';
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import Reveal from "../components/Reveal";
 import useDocumentMeta from "../hooks/useDocumentMeta";
@@ -177,43 +179,9 @@ const Home = ({ products, isLoading = false }) => {
         </div>
       </Reveal>
 
-      {/* Instagram */}
-      <Reveal as="section" className="bg-stone py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-10 flex items-end justify-between gap-4">
-            <div>
-              <p className="luxury-eyebrow">Síguenos</p>
-              <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">@alpezjoyeria</h2>
-            </div>
-            <a
-              href="https://www.instagram.com/joyeria.alpez?stkn=dnp3ZTN4MGFuZ2Fk"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden text-xs uppercase tracking-[0.2em] text-ink-soft md:inline-flex"
-            >
-              Ver perfil
-            </a>
-          </div>
+      <InstagramProfile />
+      <TikTokProfile />
 
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-6">
-            {products.slice(0, 6).map((product) => (
-              <a
-                key={product.id}
-                href="https://www.instagram.com/joyeria.alpez?stkn=dnp3ZTN4MGFuZ2Fk"
-                target="_blank"
-                rel="noreferrer"
-                className="group overflow-hidden rounded-2xl border border-line"
-              >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="aspect-square w-full object-cover transition duration-500 group-hover:scale-105"
-                />
-              </a>
-            ))}
-          </div>
-        </div>
-      </Reveal>
     </div>
   );
 };
