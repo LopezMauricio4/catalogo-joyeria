@@ -6,6 +6,8 @@ import { addInventoryMovement, createInventoryItem, fetchInventory, updateInvent
 import ProductImage from '../components/ProductImage';
 import InventoryCard from '../components/InventoryCard';
 import InventoryMovementForm from '../components/InventoryMovementForm';
+import AdminFormSections from '../components/AdminFormSections';
+import AdminFilters from '../components/AdminFilters';
 import AdminNavigation from '../components/AdminNavigation';
 import { inventoryName } from '../utils/inventoryName';
 import { normalizeText } from '../utils/catalog';
@@ -46,6 +48,7 @@ function ItemForm({ item, onSaved, onCancel, onMovement }) {
   };
   return <form className="inventory-form admin-form-compact" onSubmit={submit}>
     <div className="inventory-form-header"><div><h2>{item ? item.name : 'Agregar insumo'}</h2></div></div>
+    <AdminFormSections labels={["Datos y variantes", "Existencias y precios", "Multimedia"]}>
     <div className="inventory-form-section"><div className="inventory-fields inventory-fields-three">
       <label className="inventory-field"><span>Nombre <b>*</b></span><input required name="name" value={form.name} onChange={update} placeholder="Balín" /></label>
       <label className="inventory-field"><span>Categoría</span><select name="category" value={form.category} onChange={update}>{categories.map(value => <option key={value}>{value}</option>)}</select></label>
@@ -62,6 +65,7 @@ function ItemForm({ item, onSaved, onCancel, onMovement }) {
       <label className="inventory-field"><span>Precio de venta <small>COP</small></span><input type="number" min="0" step="0.01" name="salePrice" value={form.salePrice} onChange={update} /></label>
     </div></div>
     <div className="inventory-form-section"><label className="inventory-field"><span>Fotografía</span><input className="inventory-file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => setFile(event.target.files?.[0] || null)} /></label>{item?.image && !file && <ProductImage src={item.image} alt={item.name} className="inventory-current-image" />}</div>
+    </AdminFormSections>
     <div className="inventory-form-actions">{item && <><button type="button" className="shop-button" disabled={busy} onClick={() => onMovement(item, 'PURCHASE')}>Agregar existencias</button><button type="button" className="shop-button" disabled={busy} onClick={() => onMovement(item, 'CONSUMPTION')}>Retirar existencias</button></>}<button className="luxury-btn luxury-btn-primary" disabled={busy}>{busy ? 'Guardando…' : item ? 'Guardar cambios' : 'Crear artículo'}</button><button type="button" className="shop-button" disabled={busy} onClick={onCancel}>Cancelar</button></div>
   </form>;
 }
@@ -84,10 +88,10 @@ export default function InventoryPage() {
   const submitMovement = async data => { const item = await addInventoryMovement(movement.item.id, data); setItems(current => current.map(value => value.id === item.id ? item : value)); setEditing(current => current?.id === item.id ? item : current); setMovement({ item: null }); showToast('Existencias actualizadas', 'success'); };
   return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <AdminNavigation />
-    <div className="admin-toolbar mb-8"><div><p className="luxury-eyebrow">Administrador</p><h1 className="mt-3 text-5xl">Inventario</h1><p className="mt-3 max-w-2xl text-ink-muted">Controla insumos, variantes, costos y movimientos de stock.</p></div><Link to="/admin/productos">Volver al catálogo admin →</Link></div>
+    <div className="admin-toolbar mb-8"><div><h1 className="mt-3 text-5xl">Inventario</h1><p className="mt-3 max-w-2xl text-ink-muted">Controla insumos, variantes, costos y movimientos de stock.</p></div><Link to="/admin/productos">Volver al catálogo admin →</Link></div>
     {editing !== undefined ? <ItemForm item={editing} onMovement={openMovement} onSaved={saved} onCancel={() => setEditing(undefined)} /> : <>
       <div className="admin-options"><button onClick={() => setEditing(null)}><Plus /><strong>Agregar artículo</strong><span>Registra un insumo o variante</span></button><div className="admin-options-summary"><Package /><strong>{items.length} artículos</strong><span>{items.filter(item => item.stock <= item.minStock).length} requieren revisión de stock</span></div></div>
-      <div className="admin-filters inventory-filters"><label>Buscar<input className="admin-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre…" /></label><label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(value => <option key={value}>{value}</option>)}</select></label><label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{materials.map(value => <option key={value} value={value}>{materialLabels[value]}</option>)}</select></label><button type="button" className="shop-button inventory-refresh" aria-label="Actualizar inventario" title="Actualizar inventario" disabled={loading} onClick={() => { setLoading(true); setRevision(value => value + 1); }}><RefreshCw size={16} /></button></div>
+      <AdminFilters className="inventory-filters"><label>Buscar<input className="admin-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre…" /></label><label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(value => <option key={value}>{value}</option>)}</select></label><label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{materials.map(value => <option key={value} value={value}>{materialLabels[value]}</option>)}</select></label><button type="button" className="shop-button inventory-refresh" aria-label="Actualizar inventario" title="Actualizar inventario" disabled={loading} onClick={() => { setLoading(true); setRevision(value => value + 1); }}><RefreshCw size={16} /></button></AdminFilters>
       {loading ? <p role="status" className="my-8">Cargando inventario…</p> : <div className="inventory-stock-grid">{filtered.map(item => <InventoryCard key={item.id} item={item} onEdit={setEditing} />)}</div>}
       {!loading && !filtered.length && <p className="py-10 text-center">No hay artículos con esos filtros.</p>}
     </>}

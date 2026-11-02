@@ -39,7 +39,7 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={{ showToast }}>
       {children}
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex flex-col items-center gap-2 px-4 sm:items-end sm:px-6">
+      <div className="toast-viewport pointer-events-none fixed inset-x-0 bottom-6 z-[70] flex flex-col items-center gap-2 px-4 sm:items-end sm:px-6">
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -60,7 +60,7 @@ export const ToastProvider = ({ children }) => {
               type="button"
               onClick={() => dismissToast(toast.id)}
               aria-label="Cerrar notificación"
-              className="shrink-0 opacity-70 transition hover:opacity-100"
+              className="toast-dismiss shrink-0 opacity-70 transition hover:opacity-100"
             >
               <X className="h-3.5 w-3.5" />
             </button>

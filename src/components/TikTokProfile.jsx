@@ -41,7 +41,6 @@ function VideoPreview({ video }) {
         onError={() => setStatus('unavailable')} />}
       {status !== 'ready' && <div className="tiktok-video-fallback">
         <SocialIcon type="tiktok" size={42} />
-        <span className="shop-eyebrow">ALPEZ EN TIKTOK</span>
         <h3>Nuestras joyas en movimiento</h3>
         <p role="status">{status === 'loading' ? 'Preparando la vista previa… También puedes abrir el video en TikTok.' : 'La vista previa no está disponible en este momento. Puedes ver el video directamente en TikTok.'}</p>
         <a className="shop-button" href={videoUrl} target="_blank" rel="noopener noreferrer"><Play size={16} aria-hidden="true" />Ver video en TikTok</a>
@@ -56,8 +55,7 @@ export default function TikTokProfile() {
   return <section className="instagram-section tiktok-section" aria-labelledby="tiktok-heading">
     <div className="instagram-layout mx-auto max-w-7xl">
       <div className="instagram-copy">
-        <p className="luxury-eyebrow"><SocialIcon type="tiktok" size={20} />SÍGUENOS EN TIKTOK</p>
-        <h2 id="tiktok-heading">@alpez.joyeria</h2>
+        <h2 id="tiktok-heading"><SocialIcon type="tiktok" size={24} />@alpez.joyeria</h2>
         <p>Conoce nuestras joyas en movimiento y descubre los videos de Alpez.</p>
         <a className="shop-text-link" href={tikTokProfileUrl} target="_blank" rel="noopener noreferrer">Ver perfil en TikTok <ArrowUpRight size={16} aria-hidden="true" /></a>
       </div>

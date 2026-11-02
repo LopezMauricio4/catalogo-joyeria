@@ -6,7 +6,8 @@ import { categories, materialLabels } from '../data/mockProducts';
 import { fetchAdminProducts } from '../services/productApi';
 import { formatPrice, normalizeText } from '../utils/catalog';
 import ProductImage from '../components/ProductImage';
-import Modal from '../components/Modal';
+import BottomSheet from '../components/BottomSheet';
+import AdminFilters from '../components/AdminFilters';
 import ProductEditor from './ProductEditor';
 import AdminNavigation from '../components/AdminNavigation';
 
@@ -73,7 +74,7 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
     }} onCancel={() => setView('products')} />;
   return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <AdminNavigation />
-    <div className="admin-toolbar mb-8"><div><p className="luxury-eyebrow">Administrador</p><h1 className="mt-3 text-5xl">Tu catálogo</h1></div><Link to="/catalogo">Ver catálogo público →</Link></div>
+    <div className="admin-toolbar mb-8"><div><h1 className="mt-3 text-5xl">Tu catálogo</h1></div><Link to="/catalogo">Ver catálogo público →</Link></div>
     <nav className="admin-options" aria-label="Administrar productos">
       <button onClick={() => edit(null)} disabled={busy || loading}><Plus /><strong>Agregar producto</strong><span>Crea una nueva pieza</span></button>
       <button aria-current={view === 'products' && filter !== 'hidden' ? 'page' : undefined} disabled={busy} onClick={() => browse('all')}><Pencil /><strong>Administrar productos</strong><span>Edita, oculta o elimina</span></button>
@@ -82,12 +83,12 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
     {view === 'home' && <p className="mt-6 text-ink-muted">Selecciona una opción para comenzar.</p>}
     {view === 'products' && <section className="mt-8" aria-label="Lista de productos">
       <div className="admin-toolbar"><h2 className="text-3xl">{filter === 'hidden' ? 'Productos ocultos' : 'Administrar productos'}</h2><button className="shop-button" disabled={loading || busy} onClick={() => { setLoading(true); setLoadError(''); setRevision(n => n + 1); }}><RefreshCw size={16} />Actualizar lista</button></div>
-      <div className="admin-filters admin-product-filters">
+      <AdminFilters className="admin-product-filters">
         <label className="admin-product-search">Buscar<div className="admin-search"><Search size={15} aria-hidden="true" /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre o descripción…" /></div></label>
         <label>Visibilidad<select value={filter} onChange={event => setFilter(event.target.value)}><option value="all">Todos</option><option value="visible">Visibles</option><option value="hidden">Ocultos</option></select></label>
         <label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{Object.entries(materialLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
         <label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(item => <option key={item.key} value={item.key}>{item.label}</option>)}</select></label>
-      </div>
+      </AdminFilters>
       {loadError ? <p role="alert" className="my-6 text-red-700">{loadError} Usa “Actualizar lista” para reintentar.</p> : loading ? <p role="status" className="my-6">Cargando productos…</p> : <>
         <p role="status" className="my-5 text-sm text-ink-muted">{filtered.length} productos</p>
         <div className="admin-product-grid">{filtered.map(product => <article key={product.id} className="admin-product-card">
@@ -100,9 +101,9 @@ export default function AdminProductsPage({ onSaveProduct, onDeleteProduct, onVi
         {!filtered.length && <p className="py-10 text-center">No hay productos en esta selección. Prueba otros filtros o agrega una pieza.</p>}
       </>}
     </section>}
-    <Modal open={Boolean(pendingDelete)} onClose={() => { if (!busy) setPendingDelete(null); }} title="¿Eliminar este producto?">
+    <BottomSheet className="admin-bottom-sheet" closeLabel="Cerrar confirmación" dismissible={!busy} open={Boolean(pendingDelete)} onClose={() => { if (!busy) setPendingDelete(null); }} title="¿Eliminar este producto?">
       <p>“{pendingDelete?.name}” se eliminará definitivamente. Si quieres retirarlo temporalmente, usa Ocultar.</p>
       <div className="mt-6 flex flex-wrap gap-3"><button className="shop-button" disabled={busy} onClick={() => setPendingDelete(null)}>Cancelar</button><button className="shop-button admin-delete" disabled={busy} onClick={remove}>{busy ? 'Eliminando…' : 'Eliminar definitivamente'}</button></div>
-    </Modal>
+    </BottomSheet>
   </section>;
 }

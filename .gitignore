@@ -28,3 +28,6 @@ backend/.env.*
 *.njsproj
 *.sln
 *.sw?
+
+# Capturas y mediciones locales de diseño
+.taste-skill/

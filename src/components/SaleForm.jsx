@@ -1,3 +1,4 @@
+import AdminFormSections from './AdminFormSections';
 import { useEffect, useRef, useState } from 'react';
 import { inventoryName } from '../utils/inventoryName';
 
@@ -58,11 +59,13 @@ export default function SaleForm({ onSaved, onCancel, services }) {
   return <form className="inventory-form sales-form admin-form-compact" onSubmit={submit}>
     <h2 className="text-3xl">Registrar venta</h2>
     <fieldset disabled={busy || loading || Boolean(loadError)}>
+      <AdminFormSections labels={["Cliente", "Artículos", "Total y nota"]}>
       <div className="inventory-fields inventory-fields-three my-6">
         <label className="inventory-field">Nombre del cliente<input required name="customerName" maxLength={150} value={form.customerName} onChange={update} /></label>
         <label className="inventory-field">Teléfono del cliente<input required name="customerPhone" type="tel" maxLength={40} value={form.customerPhone} onChange={update} /></label>
         <label className="inventory-field">Fecha y hora<input required name="occurredAt" type="datetime-local" max={localNow()} value={form.occurredAt} onChange={update} /></label>
       </div>
+      <div>
       <section className="sale-line-editor">
 
         <div className="sale-article-picker">
@@ -79,11 +82,13 @@ export default function SaleForm({ onSaved, onCancel, services }) {
           <button type="button" className="shop-button shop-button-secondary" aria-label={`Quitar ${row.item?.name}`} onClick={() => setLines(current => current.filter(line => line.id !== row.id))}>Quitar</button>
         </article>)}
       </section>}
+      </div><div>
       <label className="inventory-field my-5">Nota opcional<textarea rows="2" name="note" maxLength={1000} value={form.note} onChange={update} /></label>
       <section className="sale-price-summary">
         <label className="inventory-field">Valor total de la venta (COP)<input required name="total" type="number" inputMode="decimal" min="0" max="1000000000" step="0.01" value={form.total} onChange={update} /></label>
         <div className="materials-totals" aria-live="polite"><div><span>Costo total de artículos</span><strong>{money(costCents / 100)}</strong></div><div className={profit !== null && profit < 0 ? 'sale-loss' : ''}><span>{profit !== null && profit < 0 ? 'Pérdida bruta' : 'Ganancia bruta'}</span><strong>{profit === null ? '—' : money(profit)}</strong></div></div>
       </section>
+      </div></AdminFormSections>
       <button className="luxury-btn luxury-btn-primary mt-6" type="submit" disabled={!lines.length}>{busy ? 'Registrando…' : 'Registrar venta'}</button>
     </fieldset>
     {loading && <p role="status">Cargando artículos…</p>}

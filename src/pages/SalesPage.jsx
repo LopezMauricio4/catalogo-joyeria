@@ -23,7 +23,7 @@ export default function SalesPage({ services = defaultServices }) {
     return () => controller.abort();
   }, [revision, services]);
   return <section className="admin-page sales-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <AdminNavigation /><div className="admin-toolbar mb-8"><div><p className="luxury-eyebrow">Administrador</p><h1 className="mt-3 text-5xl">Ventas</h1><p className="mt-3">Registro de ventas confirmadas y materiales vendidos.</p></div>{!adding && <button className="shop-button" onClick={() => setAdding(true)}>Agregar venta</button>}</div>
+    <AdminNavigation /><div className="admin-toolbar mb-8"><div><h1 className="mt-3 text-5xl">Ventas</h1><p className="mt-3">Registro de ventas confirmadas y materiales vendidos.</p></div>{!adding && <button className="shop-button" onClick={() => setAdding(true)}>Agregar venta</button>}</div>
     {adding ? <SaleForm services={services} onCancel={() => setAdding(false)} onSaved={() => { showToast('Venta registrada e inventario actualizado', 'success'); setAdding(false); setLoading(true); setRevision(n => n + 1); }} /> : <>
       <div className="admin-toolbar"><p>{data.total} ventas registradas</p><button type="button" className="sales-refresh" aria-label="Actualizar lista de ventas" title="Actualizar lista" disabled={loading} onClick={() => { setLoading(true); setRevision(n => n + 1); }}><RefreshCw size={16} className={loading ? 'animate-spin' : ''} /></button></div>
       {error ? <p role="alert" className="product-editor-error my-5">{error}</p> : loading ? <p role="status">Cargando ventas…</p> : data.sales.length ? <div className="sales-list">{data.sales.map(sale => <article className="sale-record" key={sale.id}>

@@ -14,11 +14,11 @@ import { useEffect, useRef, useState } from 'react';
  */
 const Reveal = ({ children, delay = 0, className = '', as: Tag = 'div' }) => {
   const ref = useRef(null);
-  const [isVisible, setIsVisible] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !('IntersectionObserver' in window)) {
       return undefined;
     }
 
@@ -32,7 +32,7 @@ const Reveal = ({ children, delay = 0, className = '', as: Tag = 'div' }) => {
           observer.disconnect();
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.08 }
     );
 
     observer.observe(node);
@@ -42,10 +42,8 @@ const Reveal = ({ children, delay = 0, className = '', as: Tag = 'div' }) => {
   return (
     <Tag
       ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-luxury ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
-      } ${className}`}
+      style={{ '--reveal-delay': `${delay}ms` }}
+      className={`reveal-section ${isVisible ? 'is-revealed' : ''} ${className}`}
     >
       {children}
     </Tag>

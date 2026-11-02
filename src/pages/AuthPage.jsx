@@ -20,7 +20,8 @@ const AuthPage = ({ onLogin, user }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useSafeToast();
-  const [mode, setMode] = useState(() => new URLSearchParams(location.search).get("mode") === "register" ? "register" : "login");
+  const mode = new URLSearchParams(location.search).get('mode') === 'register' ? 'register' : 'login';
+  const setMode = next => navigate({ pathname:'/auth', search:next === 'register' ? '?mode=register' : '' }, { replace:true });
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");

@@ -18,14 +18,7 @@ const Footer = () => {
   if (isProductDetail) return null;
 
   return (
-    <footer className="border-t border-forest-800 bg-forest-900 text-ivory-soft/90">
-      {/* Franja superior — línea firma en dorado */}
-      <div className="mx-auto max-w-7xl px-6 pt-14">
-        <div className="luxury-divider">
-          <span className="luxury-divider-mark" />
-        </div>
-      </div>
-
+    <footer className="site-footer bg-forest-900 text-ivory-soft">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.8fr_0.8fr]">
         {/* Marca */}
         <div>
@@ -63,7 +56,7 @@ const Footer = () => {
 
         {/* Navegación */}
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-400">Navegación</p>
+          <h2 className="footer-heading">Navegación</h2>
           <ul className="mt-5 space-y-3">
             {navLinks.map((link) => (
               <li key={link.label}>
@@ -77,7 +70,7 @@ const Footer = () => {
 
 
         <div className="footer-contact">
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-400">Contacto e información legal</p>
+          <h2 className="footer-heading">Contacto e información legal</h2>
           <p>Responsables:</p>
           {business.responsiblePeople.map(person => <p key={person.identification}>{person.name} · {person.identification}</p>)}
           {business.nit && <p>NIT: {business.nit}</p>}
@@ -92,7 +85,7 @@ const Footer = () => {
       </div>
 
       {/* Franja legal */}
-      <div className="border-t border-white/10">
+      <div className="footer-legal">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-6 py-6 text-center text-[11px] text-ivory-soft/50 sm:flex-row sm:justify-between sm:text-left">
           <p>© {year} Alpez Joyería. Todos los derechos reservados.</p>
           <p className="tracking-[0.14em] uppercase text-ivory-soft/40">Oro 18k · Oro laminado 18k</p>

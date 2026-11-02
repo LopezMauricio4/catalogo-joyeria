@@ -133,11 +133,12 @@ function App() {
       <RouteScroll />
       <CatalogRefresh refresh={refreshProducts} />
       <div className="min-h-screen bg-ivory text-[#18342d] antialiased">
+        <a href="#main-content" className="skip-link">Saltar al contenido</a>
         <Navbar user={user} onLogout={handleLogout} searchOpen={searchOpen} setSearchOpen={setSearchOpen} cartCount={cart.count} />
         {productsError && <div role="alert" className="catalog-load-error"><p>No pudimos cargar el catálogo. Comprueba tu conexión e inténtalo de nuevo.</p><button type="button" onClick={() => { setProductsError(''); setIsLoadingProducts(true); setLoadAttempt(value => value + 1); }}>Reintentar</button></div>}
-        <main className="min-h-[calc(100vh-13rem)]">
+        <main id="main-content" tabIndex={-1} className="min-h-[calc(100svh-13rem)]">
           <Routes>
-            <Route path="/" element={<Home products={products} isLoading={isLoadingProducts} />} />
+            <Route path="/" element={<Home products={products} isLoading={isLoadingProducts} error={productsError} />} />
             <Route path="/catalogo" element={<Catalog products={products} isLoading={isLoadingProducts} error={productsError} isSearching={searchOpen} />} />
             <Route path="/producto/:id" element={isLoadingProducts ? <p className="p-8" role="status">Cargando producto…</p> : <ProductDetail products={products} error={productsError} cart={cart} />} />
             <Route path="/carrito" element={<Cart cart={cart} products={products} isLoading={isLoadingProducts} error={productsError} refreshProducts={refreshProducts} />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
-import Modal from './Modal';
+import BottomSheet from './BottomSheet';
 import { inventoryName } from '../utils/inventoryName';
 
 const quantityFormat = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 6 });
@@ -28,7 +28,7 @@ export default function InventoryMovementForm({ item, initialType, onSave, onClo
     catch (failure) { setError(failure.message || 'No se pudo registrar el movimiento. Intenta nuevamente.'); }
     finally { setBusy(false); }
   };
-  return <Modal open onClose={close} title="Actualizar existencias" className="inventory-movement-dialog">
+  return <BottomSheet open dismissible={!busy} onClose={close} title="Actualizar existencias" closeLabel="Cerrar movimiento" className="admin-operation-sheet">
     <form className="inventory-movement-form" onSubmit={submit}>
       <div className="inventory-movement-item"><h3>{inventoryName(item)}</h3><p>{item.material}</p></div>
       <fieldset disabled={busy}>
@@ -50,5 +50,5 @@ export default function InventoryMovementForm({ item, initialType, onSave, onClo
         <div className="inventory-movement-actions"><button type="button" className="shop-button" onClick={close}>Cancelar</button><button className="luxury-btn luxury-btn-primary" disabled={!validAmount || overStock}>{busy ? <><Loader2 size={16} className="animate-spin" />Guardando…</> : adding ? 'Agregar existencias' : 'Retirar existencias'}</button></div>
       </fieldset>
     </form>
-  </Modal>;
+  </BottomSheet>;
 }

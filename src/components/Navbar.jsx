@@ -1,385 +1,127 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, Search, ShoppingCart, UserRound, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, Menu as MenuIcon, Search, ShoppingCart, UserRound } from 'lucide-react';
 import HeaderSearch from './HeaderSearch';
 import ShopNavLink from './ShopNavLink';
 import MobileCatalogMenu from './MobileCatalogMenu';
+import BottomSheet from './BottomSheet';
+import AccountMenu from './AccountMenu';
+import usePressFeedback from '../hooks/usePressFeedback';
 import { catalogSearchParams } from '../utils/catalog';
+import '../styles/navigation.css';
 
-const Navbar = ({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isSearchOpen = searchOpen && location.pathname === '/catalogo';
-  const isSearchEmpty = !(new URLSearchParams(location.search).get('q') || '').trim();
-  const searchTrigger = useRef(null);
-  const toggleSearch = event => {
-    searchTrigger.current = event.currentTarget;
-    setIsOpen(false);
-    setIsAccountOpen(false);
-    setIsHiddenOnScroll(false);
-    setSearchOpen(!isSearchOpen);
-    if (!isSearchOpen) navigate({ pathname: '/catalogo', search: catalogSearchParams(new URLSearchParams(location.search).get('q') || '').toString() });
-  };
-  const closeSearch = () => {
-    setSearchOpen(false);
-    searchTrigger.current?.focus();
-  };
+export default function Navbar({ user, onLogout, searchOpen, setSearchOpen, cartCount = 0 }) {
+  const [panel, setPanel] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHiddenOnScroll, setIsHiddenOnScroll] = useState(false);
-  const lastScrollY = useRef(window.scrollY);
+  const location = useLocation();
+  const navigate = useNavigate();
   const headerRef = useRef(null);
-  const menuTrigger = useRef(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const header = headerRef.current;
-    const trigger = menuTrigger.current;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const keepFocus = event => {
-      if (event.key !== 'Tab') return;
-      const controls = [...header.querySelectorAll('a, button, input, select')].filter(element => element.getClientRects().length && !element.closest('[inert]'));
-      const first = controls[0];
-      const last = controls[controls.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-    };
-    const closeOnDesktop = () => { if (window.innerWidth >= 1024) setIsOpen(false); };
-    document.addEventListener('keydown', keepFocus);
-    window.addEventListener('resize', closeOnDesktop);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener('keydown', keepFocus);
-      window.removeEventListener('resize', closeOnDesktop);
-      // Navigation focuses the new page; closing in place returns to the menu button.
-      if (document.activeElement === document.body || header.contains(document.activeElement)) trigger?.focus();
-    };
-  }, [isOpen]);
-
-  const isLoggedIn = user && user.role !== "guest";
-  const searchButton = <button type="button" className="shop-icon-button text-ink-soft" aria-label="Buscar joyas" aria-expanded={isSearchOpen} aria-controls="header-search" onClick={toggleSearch}><Search size={20} strokeWidth={1.8} /></button>;
-  const cartButton = <Link to="/carrito" className="shop-icon-button cart-nav-link text-ink-soft" aria-current={location.pathname === '/carrito' ? 'page' : undefined} aria-label={`Carrito, ${cartCount} ${cartCount === 1 ? 'pieza' : 'piezas'}`} onClick={() => { setIsOpen(false); setIsAccountOpen(false); }}><ShoppingCart size={21} strokeWidth={1.7} />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
-
-  const toggleMobileMenu = () => {
-    setIsOpen((open) => !open);
-    setIsAccountOpen(false);
+  const searchTrigger = useRef(null);
+  const lastScrollY = useRef(window.scrollY);
+  const pressFeedback = usePressFeedback('button, a');
+  const isSearchOpen = searchOpen && location.pathname === '/catalogo';
+  const isSearchEmpty = !(new URLSearchParams(location.search).get('q') || '').trim();
+  const isLoggedIn = user && user.role !== 'guest';
+  const closeMenu = useCallback(() => setPanel(current => current === 'menu' ? null : current), []);
+  const closeAccount = useCallback(() => setPanel(current => current === 'account' ? null : current), []);
+  const openPanel = name => {
+    setSearchOpen(false);
+    setIsHiddenOnScroll(false);
+    setPanel(current => current === name ? null : name);
+  };
+  const toggleSearch = event => {
+    searchTrigger.current = event.currentTarget;
+    setPanel(null);
+    setIsHiddenOnScroll(false);
+    setSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) navigate({ pathname:'/catalogo', search:catalogSearchParams(new URLSearchParams(location.search).get('q') || '').toString() });
+  };
+  const closeSearch = () => { setSearchOpen(false); searchTrigger.current?.focus(); };
+  const logout = async () => {
+    setLoggingOut(true);
+    try { await onLogout(); setPanel(null); }
+    finally { setLoggingOut(false); }
   };
 
-  // Navbar se comprime al hacer scroll — detalle sutil de sitios de alta gama
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => { if (desktop.matches) closeMenu(); };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, [closeMenu]);
+
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const scrollingDown = currentScrollY > lastScrollY.current && currentScrollY > 80;
-      const scrollingUp = currentScrollY < lastScrollY.current;
-
-      setIsScrolled(currentScrollY > 24);
-      if (!isOpen && !isAccountOpen && !isSearchOpen) {
-        if (scrollingDown) setIsHiddenOnScroll(true);
-        if (scrollingUp || currentScrollY <= 24) setIsHiddenOnScroll(false);
+      const y = window.scrollY;
+      setIsScrolled(y > 24);
+      if (!panel && !isSearchOpen && !headerRef.current?.contains(document.activeElement)) {
+        if (y > lastScrollY.current && y > 80) setIsHiddenOnScroll(true);
+        if (y < lastScrollY.current || y <= 24) setIsHiddenOnScroll(false);
       }
-      lastScrollY.current = currentScrollY;
+      lastScrollY.current = y;
     };
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isOpen, isAccountOpen, isSearchOpen]);
+    window.addEventListener('scroll', handleScroll, { passive:true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [panel, isSearchOpen]);
 
   useEffect(() => {
-    const closeEmptySearch = isSearchOpen && isSearchEmpty;
-    if (!isOpen && !isAccountOpen && !closeEmptySearch) return undefined;
-
-    const closeOnUserScroll = event => {
-      if (event.target instanceof Element && event.target.closest('#mobile-menu')) return;
-      setIsOpen(false);
-      setIsAccountOpen(false);
-      if (closeEmptySearch) setSearchOpen(false);
+    if (!isSearchOpen || !isSearchEmpty) return;
+    const closeEmptySearch = event => {
+      if (!headerRef.current?.contains(event.target)) setSearchOpen(false);
     };
-
-    window.addEventListener("wheel", closeOnUserScroll, { passive: true });
-    window.addEventListener("touchmove", closeOnUserScroll, { passive: true });
+    window.addEventListener('wheel', closeEmptySearch, { passive:true });
+    window.addEventListener('touchmove', closeEmptySearch, { passive:true });
     return () => {
-      window.removeEventListener("wheel", closeOnUserScroll);
-      window.removeEventListener("touchmove", closeOnUserScroll);
+      window.removeEventListener('wheel', closeEmptySearch);
+      window.removeEventListener('touchmove', closeEmptySearch);
     };
-  }, [isOpen, isAccountOpen, isSearchOpen, isSearchEmpty, setSearchOpen]);
+  }, [isSearchOpen, isSearchEmpty, setSearchOpen]);
 
-  // Cierra los paneles flotantes al hacer click fuera o presionar Escape
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (headerRef.current && !headerRef.current.contains(event.target)) {
-        setIsOpen(false);
-        setIsAccountOpen(false);
-      }
-    };
-    const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-        setIsAccountOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
+  const searchButton = <button type="button" className="nav-icon-button" aria-label="Buscar joyas" aria-expanded={isSearchOpen} aria-controls={isSearchOpen ? 'header-search' : undefined} onClick={toggleSearch}><Search size={21} strokeWidth={1.7} aria-hidden="true" /></button>;
+  const cartButton = <Link to="/carrito" className="nav-icon-button cart-nav-link" aria-current={location.pathname === '/carrito' ? 'page' : undefined} aria-label={`Carrito, ${cartCount} ${cartCount === 1 ? 'pieza' : 'piezas'}`}><ShoppingCart size={21} strokeWidth={1.7} aria-hidden="true" />{cartCount > 0 && <span className="cart-count">{cartCount > 99 ? '99+' : cartCount}</span>}</Link>;
+  const accountButton = <button type="button" className="nav-icon-button" aria-label="Abrir cuenta" aria-haspopup="dialog" aria-expanded={panel === 'account'} aria-controls="account-panel" onClick={() => openPanel('account')}><UserRound size={21} strokeWidth={1.7} aria-hidden="true" /></button>;
 
-  return (
-    <>
-    {isOpen && <button className="mobile-menu-backdrop" type="button" tabIndex={-1} aria-label="Cerrar menú de navegación" onClick={() => setIsOpen(false)} />}
-    <header
-      ref={headerRef}
-      className={`sticky top-0 z-50 border-b bg-ivory-soft/90 backdrop-blur-md transition-all duration-300 ${
-        isHiddenOnScroll && !isSearchOpen ? "-translate-y-full" : "translate-y-0"
-      } ${
-        isScrolled ? "border-line shadow-[0_10px_30px_rgba(11,37,27,0.05)]" : "border-transparent"
-      }`}
-    >
+  return <>
+    <header ref={headerRef} onFocusCapture={() => setIsHiddenOnScroll(false)} {...pressFeedback}
+      className={`site-header sticky top-0 z-50 bg-ivory-soft transition-transform duration-300 ${isHiddenOnScroll && !isSearchOpen && !panel ? '-translate-y-full' : 'translate-y-0'}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div
-          className={`flex items-center justify-between transition-all duration-300 ${
-            isScrolled ? "h-16" : "h-20"
-          }`}
-        >
-          <div className="flex w-full items-center justify-between lg:hidden">
-            <div className="flex items-center gap-1">
-            <button
-              ref={menuTrigger}
-              type="button"
-              onClick={toggleMobileMenu}
-              className="flex h-11 w-11 items-center justify-center text-ink-soft focus:outline-none"
-              aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
-              aria-expanded={isOpen}
-              aria-controls="mobile-menu"
-            >
-              {isOpen ? <X size={22} /> : <MenuIcon size={22} />}
-            </button>
-            {searchButton}
-            </div>
-
-            <Link to="/" className="absolute left-1/2 flex -translate-x-1/2 items-center" aria-label="Alpez, inicio">
-              <span className="font-display text-2xl tracking-[0.16em] text-ink-soft uppercase">ALPEZ</span>
-            </Link>
-
-            <div className="flex items-center gap-1">
-              {cartButton}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAccountOpen((open) => !open);
-                  setIsOpen(false);
-                }}
-                className="flex h-11 w-11 items-center justify-center text-ink-soft focus:outline-none"
-                aria-label="Abrir cuenta"
-                aria-expanded={isAccountOpen}
-                aria-controls="account-panel"
-              >
-                <UserRound size={20} strokeWidth={1.7} />
-              </button>
-            </div>
+        <div className={`navigation-bar flex items-center justify-between transition-[height] duration-300 ${isScrolled ? 'h-16' : 'h-20'}`}>
+          <div className="mobile-navigation-bar lg:hidden">
+            <div className="navigation-icons"><button type="button" className="nav-icon-button" aria-label="Abrir menú" aria-haspopup="dialog" aria-expanded={panel === 'menu'} aria-controls="mobile-menu" onClick={() => openPanel('menu')}><MenuIcon size={23} strokeWidth={1.7} aria-hidden="true" /></button>{searchButton}</div>
+            <Link to="/" className="mobile-navigation-brand" aria-label="Alpez, inicio">ALPEZ</Link>
+            <div className="navigation-icons">{cartButton}{accountButton}</div>
           </div>
-
-          <Link
-            to="/"
-            className="absolute left-1/2 hidden -translate-x-1/2 items-center lg:flex"
-            aria-label="Alpez, inicio"
-          >
-            <span className="font-display text-4xl font-semibold tracking-[0.16em] text-ink-soft uppercase">ALPEZ</span>
-          </Link>
-
-          <nav className="desktop-shop-nav hidden items-center gap-5 text-[11px] tracking-[0.1em] uppercase text-ink-muted lg:flex">
-            {searchButton}
-            <ShopNavLink to="/">
-              Inicio
-            </ShopNavLink>
-            <ShopNavLink to="/catalogo">
-              Catálogo
-            </ShopNavLink>
-
-            <ShopNavLink to="/catalogo?material=oro-18k">
-              Oro 18k
-            </ShopNavLink>
-            <ShopNavLink to="/catalogo?material=laminado">
-              Oro laminado 18k
-            </ShopNavLink>
-
+          <Link to="/" className="hidden shrink-0 items-center lg:flex" aria-label="Alpez, inicio"><span className="font-display text-4xl font-semibold tracking-[0.16em] text-ink-soft">ALPEZ</span></Link>
+          <nav aria-label="Navegación principal" className="desktop-shop-nav hidden items-center gap-5 text-sm text-ink-soft lg:flex">
+            {searchButton}<ShopNavLink to="/">Inicio</ShopNavLink><ShopNavLink to="/catalogo">Catálogo</ShopNavLink><ShopNavLink to="/catalogo?material=oro-18k">Oro 18k</ShopNavLink><ShopNavLink to="/catalogo?material=laminado">Oro laminado 18k</ShopNavLink>
           </nav>
-
-          <div className="hidden items-center gap-3 lg:flex">
-            {cartButton}
-            {user?.role === "admin" && (
-              <>
-                <Link
-                  to="/admin/productos"
-                  className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
-                >
-                  Administrar
-                </Link>
-                <Link
-                  to="/admin/inventario"
-                  className="rounded-pill border border-line-strong px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-ink-soft transition hover:border-forest-400 hover:bg-forest-50"
-                >
-                  Inventario
-                </Link>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setIsAccountOpen((open) => !open);
-                setIsOpen(false);
-              }}
-              className="flex h-11 w-11 items-center justify-center text-ink-soft focus:outline-none"
-              aria-label="Abrir cuenta"
-              aria-expanded={isAccountOpen}
-              aria-controls="account-panel"
-            >
-              <UserRound size={21} strokeWidth={1.7} />
-            </button>
-          </div>
-
+          <div className="hidden items-center gap-2 lg:flex">{cartButton}{accountButton}</div>
         </div>
       </div>
-
       {isSearchOpen && <HeaderSearch onClose={closeSearch} />}
-
-      <div
-        id="account-panel"
-        inert={!isAccountOpen}
-        aria-hidden={!isAccountOpen}
-        className={`absolute right-4 top-full w-[min(20rem,calc(100vw-2rem))] origin-top-right rounded-2xl border border-line bg-ivory-soft p-5 shadow-[0_18px_40px_rgba(11,37,27,0.12)] transition-all duration-200 lg:right-8 ${
-          isAccountOpen ? "pointer-events-auto translate-y-2 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"
-        }`}
-      >
-        {isLoggedIn ? (
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">Tu cuenta</p>
-            <p className="mt-2 font-display text-2xl text-ink-soft">{user.userName || "Cuenta"}</p>
-            <p className="mt-1 truncate text-sm text-ink-muted">{user.email}</p>
-            <div className="mt-5 flex flex-col gap-2">
-              {user.role === "admin" && (
-                <>
-                  <Link
-                    to="/admin/productos"
-                    onClick={() => setIsAccountOpen(false)}
-                    className="rounded-xl border border-line px-4 py-3 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft"
-                  >
-                    Panel admin
-                  </Link>
-                  <Link
-                    to="/admin/inventario"
-                    onClick={() => setIsAccountOpen(false)}
-                    className="rounded-xl border border-line px-4 py-3 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft"
-                  >
-                    Inventario
-                  </Link>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  onLogout();
-                  setIsAccountOpen(false);
-                }}
-                className="luxury-btn luxury-btn-primary w-full"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">Acceso</p>
-            <p className="mt-2 font-display text-2xl text-ink-soft">Bienvenido</p>
-            <div className="mt-5 flex gap-2">
-              <Link
-                to="/auth"
-                onClick={() => setIsAccountOpen(false)}
-                className="luxury-btn luxury-btn-primary flex-1 px-3!"
-              >
-                Iniciar sesión
-              </Link>
-              <Link
-                to="/auth?mode=register"
-                onClick={() => setIsAccountOpen(false)}
-                className="luxury-btn luxury-btn-secondary flex-1 px-3!"
-              >
-                Registrarse
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Menú móvil */}
-      <div
-        id="mobile-menu"
-        inert={!isOpen}
-        aria-hidden={!isOpen}
-        style={{ '--mobile-menu-header-height': `${isScrolled ? 64 : 80}px` }}
-        className={`mobile-shop-menu absolute left-0 right-0 top-full overflow-hidden border-t border-line bg-white shadow-[0_18px_30px_rgba(11,37,27,0.08)] transition-[max-height] duration-300 ease-luxury lg:hidden ${
-          isOpen ? "is-open" : "max-h-0"
-        }`}
-      >
-        <nav className="flex flex-col gap-1 px-4 py-4 sm:px-6">
-          <Link
-            to="/"
-            onClick={() => setIsOpen(false)}
-            className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-          >
-            Inicio
-          </Link>
-          <MobileCatalogMenu onNavigate={() => setIsOpen(false)} />
-          <div className="my-2 h-px bg-forest-100" />
-          <Link
-            to="/garantias-y-cambios"
-            onClick={() => setIsOpen(false)}
-            className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-          >
-            Garantías y cambios
-          </Link>
-
-          {user?.role === "admin" && (
-            <Link
-              to="/admin/productos"
-              onClick={() => setIsOpen(false)}
-              className="rounded-xl px-4 py-3 text-left text-[11px] tracking-[0.22em] uppercase text-forest-800 transition hover:bg-forest-50"
-            >
-              Administrar productos
-            </Link>
-          )}
-
-          <div className="mt-4 flex flex-col gap-2 border-t border-forest-100 pt-4">
-            {isLoggedIn ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onLogout();
-                  setIsOpen(false);
-                }}
-                className="luxury-btn luxury-btn-primary w-full"
-              >
-                Cerrar sesión
-              </button>
-            ) : (
-              <Link
-                to="/auth"
-                onClick={() => setIsOpen(false)}
-                className="luxury-btn luxury-btn-primary w-full"
-              >
-                Registrarse / Iniciar sesión
-              </Link>
-            )}
-
-          </div>
-        </nav>
-      </div>
     </header>
-    </>
-  );
-};
 
-export default Navbar;
+    <BottomSheet id="mobile-menu" open={panel === 'menu'} onClose={closeMenu} title="Explora Alpez" closeLabel="Cerrar menú" className="navigation-sheet" mobileBreakpoint={1023}>
+      <div className="navigation-sheet-content">
+        <nav className="mobile-menu-links" aria-label="Navegación móvil">
+          <ShopNavLink to="/" onClick={closeMenu}>Inicio <ArrowRight size={18} aria-hidden="true" /></ShopNavLink>
+          <MobileCatalogMenu onNavigate={closeMenu} />
+          <ShopNavLink to="/carrito" onClick={closeMenu}>Mi carrito <ArrowRight size={18} aria-hidden="true" /></ShopNavLink>
+          <ShopNavLink to="/garantias-y-cambios" onClick={closeMenu}>Garantías y cambios <ArrowRight size={18} aria-hidden="true" /></ShopNavLink>
+        </nav>
+        <div className="mobile-menu-account">
+          <p>{isLoggedIn ? `Hola, ${user.userName || 'bienvenido'}` : 'Tu cuenta en Alpez'}</p>
+          {isLoggedIn ? <button type="button" className="navigation-action navigation-action-primary" onClick={() => setPanel('account')}>Ver mi cuenta <UserRound size={18} aria-hidden="true" /></button> : <>
+            <Link className="navigation-action navigation-action-primary" to="/auth" onClick={closeMenu}>Iniciar sesión <ArrowRight size={18} aria-hidden="true" /></Link>
+            <Link className="navigation-action navigation-action-secondary" to="/auth?mode=register" onClick={closeMenu}>Crear cuenta</Link>
+          </>}
+        </div>
+      </div>
+    </BottomSheet>
+    <BottomSheet id="account-panel" open={panel === 'account'} onClose={closeAccount} title={isLoggedIn ? 'Tu cuenta' : 'Bienvenido a Alpez'} closeLabel="Cerrar cuenta" className="account-sheet" returnFocusSelector={'button[aria-controls="account-panel"]'}>
+      <AccountMenu user={user} onNavigate={closeAccount} onLogout={logout} loggingOut={loggingOut} />
+    </BottomSheet>
+  </>;
+}

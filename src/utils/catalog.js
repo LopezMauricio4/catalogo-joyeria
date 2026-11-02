@@ -16,6 +16,15 @@ export const resetCollectionFilters = params => {
   return new URLSearchParams(material ? { material } : {});
 };
 export const catalogSearchParams = query => new URLSearchParams(query ? { q: query } : {});
+export const orderCategoriesByProductCount = (categories, products, material = '') => {
+  const counts = new Map();
+  for (const product of products) {
+    if (material && product.material !== material) continue;
+    counts.set(product.category, (counts.get(product.category) || 0) + 1);
+  }
+  // A copy keeps the shared category list intact; ties retain its original order.
+  return [...categories].sort((a, b) => (counts.get(b.key) || 0) - (counts.get(a.key) || 0));
+};
 export const validatePriceRange = (min, max) => {
   if ([min, max].some(value => value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 0))) return 'Escribe precios válidos, iguales o mayores a cero.';
   if (min !== '' && max !== '' && Number(min) > Number(max)) return 'El precio máximo debe ser mayor o igual al mínimo.';

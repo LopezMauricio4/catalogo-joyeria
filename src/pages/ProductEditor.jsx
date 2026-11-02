@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, Save, Star } from "lucide-react";
 import { useToast } from "../hooks/useToast";
 import { categories, materialLabels } from "../data/mockProducts";
+import AdminFormSections from '../components/AdminFormSections';
+import AdminNavigation from '../components/AdminNavigation';
 import ProductGalleryEditor from '../components/ProductGalleryEditor';
 import { imageOrder } from '../utils/imageOrder';
 import { disclosureFeatures, readProductDisclosure } from '../utils/productDisclosure';
@@ -103,10 +105,10 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
   };
 
   return (
-    <main className="product-editor-page product-editor-compact mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <section className="product-editor-page product-editor-compact mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+      <AdminNavigation />
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="luxury-eyebrow">Administrador</p>
           <h1 className="mt-3 text-5xl font-medium tracking-[-0.04em] text-ink md:text-6xl">
             {editingId ? 'Editar producto' : 'Agregar producto'}
           </h1>
@@ -121,12 +123,13 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
         <section className="product-editor-card">
           {editingId && <p className="product-editor-note">{product.visible ? "Visible en el catálogo." : "Oculto: guardar cambios no lo publicará."}</p>}
           <form onSubmit={handleSubmit}><fieldset disabled={isSaving} className="product-editor-fields">
+<AdminFormSections labels={["Datos básicos", "Variantes y precio", "Multimedia"]}><div>
             <div className="product-editor-section">
             <div className="grid gap-5 md:grid-cols-2">
               <label className="product-editor-field">
                 Nombre
                 <input
-                  name="name"
+                  required name="name"
                   value={form.name}
                   onChange={handleChange}
                   className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
@@ -138,6 +141,34 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             </div>
             </div>
 
+            <div className="product-editor-section">
+            <label className="product-editor-field">
+              Descripción
+              <textarea
+                required name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows="2"
+                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
+                placeholder="Describe la pieza..."
+              />
+            </label>
+
+            <label className="product-editor-field">
+              Características
+              <textarea
+                name="features"
+                value={form.features}
+                onChange={handleChange}
+                rows="2"
+                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
+                placeholder="18 kilates, Acabado brillante, Diseño atemporal"
+              />
+            </label>
+            </div>
+
+
+</div><div>
             <div className="product-editor-section">
             <div className="grid gap-5 md:grid-cols-2">
               <label className="product-editor-field">
@@ -207,6 +238,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
                 />
               </label></div>
 </section>
+</div><div>
             <div className="product-editor-section">
             <label className="product-editor-field">
               {editingId ? 'Agregar imagen por URL (opcional)' : 'Imagen (URL opcional)'}
@@ -235,32 +267,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
             <p className="text-sm text-ink-muted editor-gallery-note">Arrastra las fotos para ordenarlas. La primera será la portada. Los cambios se aplican al guardar.</p>
             </div>
 
-            <div className="product-editor-section">
-            <label className="product-editor-field">
-              Descripción
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                rows="2"
-                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                placeholder="Describe la pieza..."
-              />
-            </label>
-
-            <label className="product-editor-field">
-              Características
-              <textarea
-                name="features"
-                value={form.features}
-                onChange={handleChange}
-                rows="2"
-                className="mt-2 w-full rounded-2xl border border-line bg-ivory-soft px-4 py-3 text-ink-soft outline-none transition focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20"
-                placeholder="18 kilates, Acabado brillante, Diseño atemporal"
-              />
-            </label>
-            </div>
-
+</div></AdminFormSections>
             {formError && (
               <p role="alert" className="product-editor-error">
                 {formError}
@@ -285,7 +292,7 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
         </section>
 
       </div>
-    </main>
+    </section>
   );
 };
 

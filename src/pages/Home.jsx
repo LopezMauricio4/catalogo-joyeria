@@ -1,4 +1,4 @@
-import { ArrowRight, MessageCircle, Package, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import JewelryCard from "../components/JewelryCard";
 import ProductImage from "../components/ProductImage";
@@ -27,9 +27,6 @@ const materials = [
   },
 ];
 
-const heroImage =
-  "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1200&q=80";
-
 const CategoryCard = ({ category, products }) => {
   const availableProducts = products.filter(
     (product) => product.category === category.key,
@@ -38,17 +35,14 @@ const CategoryCard = ({ category, products }) => {
 
   return (
     <Link to={`/catalogo?categoria=${category.key}`} className="category-card group">
-      {activeProduct ? (
+      {activeProduct && (
         <ProductImage
           key={activeProduct.id}
           src={activeProduct.image}
           alt={`${category.label}: ${activeProduct.name}`}
           className="category-card-image"
         />
-      ) : (
-        <img src={heroImage} alt={category.label} className="category-card-image" />
       )}
-      <span className="category-card-overlay" />
       <span className="category-card-content">
         <span className="category-card-label">{category.label}</span>
         <span className="category-card-action">
@@ -56,13 +50,13 @@ const CategoryCard = ({ category, products }) => {
           <ArrowRight className="h-3 w-3" />
         </span>
       </span>
-      {availableProducts.length > 0 && <span className="category-card-count">{availableProducts.length} {availableProducts.length === 1 ? 'pieza' : 'piezas'}</span>}
+      <span className="category-card-count">{availableProducts.length} {availableProducts.length === 1 ? 'pieza' : 'piezas'}</span>
     </Link>
   );
 };
 
 // isLoading: true mientras App.jsx espera la respuesta de la API (opcional).
-const Home = ({ products, isLoading = false }) => {
+const Home = ({ products, isLoading = false, error = '' }) => {
   useDocumentMeta({});
   const whatsappLink = buildWhatsAppLink("Hola, quiero una asesoría para elegir una joya.");
 
@@ -71,6 +65,7 @@ const Home = ({ products, isLoading = false }) => {
   // para que la sección nunca se vea vacía mientras ajustas el panel de admin.
   const featuredProducts = products.filter((product) => product.featured).slice(0, 4);
   const showcaseProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
+  const availableCategories = categories.filter(category => products.some(product => product.category === category.key));
 
   return (
     <div className="home-storefront bg-ivory text-ink-soft">
@@ -86,7 +81,6 @@ const Home = ({ products, isLoading = false }) => {
 
         <div className="home-hero-content">
           <div className="home-hero-copy">
-            <p className="luxury-eyebrow">Joyería Alpez</p>
             <h1>Una joya para<br />cada momento.</h1>
             <p>Descubre nuestras piezas en oro 18k y oro laminado. Encuentra la que va contigo.</p>
 
@@ -105,29 +99,27 @@ const Home = ({ products, isLoading = false }) => {
       {/* Materiales */}
       <Reveal as="section" className="home-material-section mx-auto max-w-7xl px-6 py-20">
         <div className="home-material-heading">
-          <p className="luxury-eyebrow">Nuestras colecciones</p>
-          <h2>Elige el material de tu próxima joya</h2>
+          <h2>Nuestras colecciones</h2>
           <p>Explora nuestras dos colecciones: oro 18k y oro laminado 18k. Selecciona una para descubrir sus piezas.</p>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           {materials.map((material) => (
-            <Link key={material.key} to={`/catalogo?material=${material.key}`} className={`luxury-card material-card material-card-${material.key} home-material-photo-card`}>
+            <Link key={material.key} to={`/catalogo?material=${material.key}`} className="home-material-photo-card">
+              <img src={material.image} alt={`Joyas de la colección ${material.title}`} loading="lazy" decoding="async" width={material.key === 'oro-18k' ? 562 : 859} height="1000" />
               <div className="home-material-card-copy">
                 <h3>{material.title}</h3>
                 <p>{material.description}</p>
                 <span className="home-material-card-action">Ver colección <ArrowRight size={16} aria-hidden="true" /></span>
               </div>
-              <img src={material.image} alt={`Joyas de la colección ${material.title}`} loading="lazy" decoding="async" width={material.key === 'oro-18k' ? 562 : 859} height="1000" />
             </Link>
           ))}
         </div>
       </Reveal>
 
       {/* Destacados */}
-      <Reveal as="section" className="home-featured mx-auto max-w-7xl px-6 py-20">
+      {!error && <Reveal as="section" className="home-featured mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 flex items-center justify-between gap-4">
           <div>
-            <p className="luxury-eyebrow">Destacados</p>
             <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Nuestras favoritas</h2>
           </div>
           <Link to="/catalogo" className="shop-text-link">
@@ -148,34 +140,34 @@ const Home = ({ products, isLoading = false }) => {
             ))}
           </div>
         ) : (
-          <div className="rounded-card-lg border border-dashed border-sand-strong bg-ivory-soft/90 px-6 py-14 text-center">
-            <p className="text-ink-muted">Todavía no hay productos cargados desde el backend.</p>
+          <div className="home-empty">
+            <p>Estamos preparando la colección. Escríbenos y te ayudamos a elegir tu próxima joya.</p>
+            <a href={whatsappLink} target="_blank" rel="noreferrer" className="shop-text-link">Pedir asesoría <ArrowRight size={16} aria-hidden="true" /></a>
           </div>
         )}
-      </Reveal>
+      </Reveal>}
 
       {/* Categorías */}
-      <Reveal as="section" className="home-categories bg-stone py-20">
+      {availableCategories.length > 0 && <Reveal as="section" className="home-categories bg-stone py-20">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-12 text-center">
-            <p className="luxury-eyebrow">Categorías</p>
             <h2 className="mt-3 text-4xl font-light tracking-tight text-ink">Encuentra tu estilo</h2>
           </div>
 
           <div className="home-category-grid">
-            {categories.filter(category => products.some(product => product.category === category.key)).map((category) => (
+            {availableCategories.map((category) => (
               <CategoryCard key={category.key} category={category} products={products} />
             ))}
           </div>
         </div>
-      </Reveal>
+      </Reveal>}
 
       <Reveal as="section" className="home-service-section mx-auto max-w-7xl px-6 py-20">
-        <div className="home-material-heading"><p className="luxury-eyebrow">TE ACOMPAÑAMOS</p><h2>Elige con confianza</h2></div>
+        <div className="home-material-heading"><h2>Elige con confianza</h2></div>
         <div className="home-services">
-          <article><MessageCircle size={24} strokeWidth={1.3} /><h3>Atención personal</h3><p>Te ayudamos a elegir y confirmamos disponibilidad por WhatsApp.</p><a href={whatsappLink} target="_blank" rel="noreferrer">Hablar con Alpez <ArrowRight size={14} /></a></article>
-          <article><ShieldCheck size={24} strokeWidth={1.3} /><h3>Garantía de tu pieza</h3><p>Consulta la cobertura y los cuidados según el material de tu joya.</p><Link to="/garantias-y-cambios">Conocer la garantía <ArrowRight size={14} /></Link></article>
-          <article><Package size={24} strokeWidth={1.3} /><h3>Entrega coordinada</h3><p>Acordamos contigo las opciones de entrega y el total antes de confirmar.</p><a href={buildWhatsAppLink('Hola, Alpez. Quisiera conocer las opciones de entrega para mi pedido.')} target="_blank" rel="noreferrer">Consultar entrega <ArrowRight size={14} /></a></article>
+          <article><h3>Atención personal</h3><p>Te ayudamos a elegir y confirmamos disponibilidad por WhatsApp.</p><a href={whatsappLink} target="_blank" rel="noreferrer">Hablar con Alpez <ArrowRight size={16} aria-hidden="true" /></a></article>
+          <article><h3>Garantía de tu pieza</h3><p>Consulta la cobertura y los cuidados según el material de tu joya.</p><Link to="/garantias-y-cambios">Conocer la garantía <ArrowRight size={16} aria-hidden="true" /></Link></article>
+          <article><h3>Entrega coordinada</h3><p>Acordamos contigo las opciones de entrega y el total antes de confirmar.</p><a href={buildWhatsAppLink('Hola, Alpez. Quisiera conocer las opciones de entrega para mi pedido.')} target="_blank" rel="noreferrer">Consultar entrega <ArrowRight size={16} aria-hidden="true" /></a></article>
         </div>
       </Reveal>
 
