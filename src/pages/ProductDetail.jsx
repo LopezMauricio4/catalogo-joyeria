@@ -7,7 +7,8 @@ import ProductImage from '../components/ProductImage';
 import Modal from '../components/Modal';
 import useDocumentMeta from '../hooks/useDocumentMeta';
 import { formatPrice, materialNames } from '../utils/catalog';
-import { buildWhatsAppLink, generateProductMessage } from '../utils/whatsappGenerator';
+import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
+import { generateProductMessage, getCatalogOrigin } from '../utils/whatsappGenerator';
 import { stockLimit } from '../utils/cart';
 import { readProductDisclosure } from '../utils/productDisclosure';
 import { categories } from '../data/mockProducts';
@@ -27,7 +28,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const images = [...new Set([product.image, ...(product.images || [])].filter(Boolean))];
   const index = Math.min(selected, Math.max(0, images.length - 1));
 
-  const whatsappLink = buildWhatsAppLink(generateProductMessage(product, window.location.origin));
+  const whatsappMessage = generateProductMessage(product, getCatalogOrigin(window.location.origin));
   const move = direction => setSelected(current => (current + direction + images.length) % images.length);
   const label = 'Consultar por WhatsApp';
   const category = categories.find(item => item.key === product.category);
@@ -41,7 +42,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   }, []);
   const quantityInCart = cart.items.find(item => item.id === String(product.id))?.quantity || 0;
   const atLimit = quantityInCart >= stockLimit(product);
-  const purchaseActions = <div className="product-purchase-actions"><a className="shop-button" href={whatsappLink} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />{label}</a>{<button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
+  const purchaseActions = <div className="product-purchase-actions"><WhatsAppAdvisorButton message={whatsappMessage} className="shop-button"><WhatsAppIcon size={19} />{label}</WhatsAppAdvisorButton>{<button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
   return <div className="product-page shop-shell">
     <Link className="product-back" to={catalogReturn}><ArrowLeft size={17} />Volver a las piezas</Link>
     <nav className="product-breadcrumb" aria-label="Ruta de navegación"><Link to="/catalogo">Catálogo</Link><span aria-hidden="true">/</span><Link to={categoryUrl}>{category?.label || 'Piezas'}</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span></nav>
@@ -82,7 +83,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
         </div>
       </div>
     </section>
-    {showMobilePurchase && !zoom && <aside className="product-quick-purchase" aria-label="Consultar esta joya"><div><span>{product.name}</span><strong>{formatPrice(product.price)}{product.price > 0 && <small> COP</small>}</strong></div><a href={whatsappLink} className="shop-button" target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={17} />Consultar</a></aside>}
+    {showMobilePurchase && !zoom && <aside className="product-quick-purchase" aria-label="Consultar esta joya"><div><span>{product.name}</span><strong>{formatPrice(product.price)}{product.price > 0 && <small> COP</small>}</strong></div><WhatsAppAdvisorButton message={whatsappMessage} className="shop-button"><WhatsAppIcon size={17} />Consultar</WhatsAppAdvisorButton></aside>}
     {relatedProducts.length > 0 && (
       <section className="product-related" aria-label="También te puede interesar">
         <div className="product-related-heading">

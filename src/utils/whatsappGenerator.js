@@ -2,13 +2,23 @@ import { formatPrice, materialNames } from './catalog.js';
 import { cartSubtotal } from './cart.js';
 import { business } from '../data/legal.js';
 
+export const getCatalogOrigin = (currentOrigin) =>
+  (import.meta.env?.VITE_PUBLIC_SITE_URL?.trim() || currentOrigin).replace(/\/$/, '');
+
+const productUrl = (origin, id) => `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(id)}`;
+
+export const addCatalogLink = (message, origin) => {
+  if (/^https?:\/\/\S+$/m.test(message)) return message;
+  return `${message}\n\nVer catálogo de Alpez:\n${origin.replace(/\/$/, '')}/catalogo`;
+};
+
 export const generateCartMessage = (rows, origin = '') => [
   'Hola, quisiera pedir estas joyas:',
   ...rows.map(({ product, quantity }, index) => [
     `\n${index + 1}. ${product.name} · ${materialNames[product.material] || product.material}`,
     `Cantidad: ${quantity}`,
     `Precio por unidad: ${formatPrice(product.price)}${product.price > 0 ? ' COP' : ''}`,
-    origin && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
+    origin && `Ver producto en Alpez:\n${productUrl(origin, product.id)}`,
   ].filter(Boolean).join('\n')),
   `\nSubtotal de piezas con precio: ${cartSubtotal(rows) > 0 ? `${formatPrice(cartSubtotal(rows))} COP` : 'Por confirmar'}.`,
   rows.some(row => !(row.product.price > 0)) && 'Hay piezas con precio por confirmar.',
@@ -17,9 +27,9 @@ export const generateCartMessage = (rows, origin = '') => [
 
 export const WHATSAPP_NUMBER = business.whatsappNumber;
 
-export const buildWhatsAppLink = (message = '') => {
+export const buildWhatsAppLink = (message = '', number = WHATSAPP_NUMBER) => {
   const safeMessage = encodeURIComponent(message || 'Hola, quiero información sobre sus joyas.');
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${safeMessage}`;
+  return `https://wa.me/${number}?text=${safeMessage}`;
 };
 
 export const generateProductMessage = (product, origin = '') => {
@@ -29,7 +39,7 @@ export const generateProductMessage = (product, origin = '') => {
     `Hola, me interesa ${productName}.`,
     productMaterial && `Material: ${productMaterial}.`,
     product?.price > 0 && `Precio del catálogo: ${formatPrice(product.price)} COP.`,
-    origin && product?.id && `${origin.replace(/\/$/, '')}/producto/${encodeURIComponent(product.id)}`,
+    origin && product?.id && `\nVer producto en Alpez:\n${productUrl(origin, product.id)}\n`,
     '¿Me confirmas disponibilidad y opciones de entrega para hacer mi compra?',
   ].filter(Boolean).join('\n');
 };

@@ -7,7 +7,8 @@ import Modal from '../components/Modal';
 import useDocumentMeta from '../hooks/useDocumentMeta';
 import { cartSubtotal, resolveCart } from '../utils/cart';
 import { formatPrice, materialNames } from '../utils/catalog';
-import { buildWhatsAppLink, generateCartMessage } from '../utils/whatsappGenerator';
+import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
+import { generateCartMessage, getCatalogOrigin } from '../utils/whatsappGenerator';
 
 export default function Cart({ cart, products, isLoading, error, refreshProducts }) {
   useDocumentMeta({ title: 'Tu carrito', description: 'Reúne tus joyas favoritas y coordina tu pedido por WhatsApp.' });
@@ -56,7 +57,7 @@ export default function Cart({ cart, products, isLoading, error, refreshProducts
             {rows.some(row => row.product && !(row.product.price > 0)) && <p>Hay piezas con precio por confirmar que no se incluyen en el subtotal.</p>}
             <p>Los precios de las piezas incluyen los impuestos aplicables. El envío se cotiza por separado; confirmamos el total, pago y entrega por WhatsApp antes de cerrar la compra. Agregar piezas no las reserva.</p>
             <p><Link to="/politica-de-datos" className="underline">Política de Tratamiento de Datos Personales</Link></p>
-            {verified ? <a className="shop-button" href={buildWhatsAppLink(generateCartMessage(rows, window.location.origin))} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={19} />Abrir WhatsApp con mi pedido</a>
+            {verified ? <WhatsAppAdvisorButton message={generateCartMessage(rows, getCatalogOrigin(window.location.origin))} className="shop-button"><WhatsAppIcon size={19} />Abrir WhatsApp con mi pedido</WhatsAppAdvisorButton>
               : <button className="shop-button" type="button" disabled={checking} onClick={verify}><WhatsAppIcon size={19} />{checking ? 'Verificando piezas…' : 'Continuar por WhatsApp'}</button>}
             {notice && <p role="status" className="cart-notice">{notice}</p>}
             <p className="cart-note">Tu carrito se conserva en este navegador. El pedido se envía cuando lo confirmas en WhatsApp.</p>

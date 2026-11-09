@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { filterProducts, readCatalogFilters, validatePriceRange, formatPrice } from '../src/utils/catalog.js';
-import { generateProductMessage, buildWhatsAppLink } from '../src/utils/whatsappGenerator.js';
+import { addCatalogLink, generateProductMessage, buildWhatsAppLink } from '../src/utils/whatsappGenerator.js';
 
 const products = [
   { id: 'a', name: 'Anillo Órbita', category: 'anillos', material: 'oro-18k', price: 120000, stock: 3, createdAt: '2026-09-01', featured: false },
@@ -42,8 +42,14 @@ test('WhatsApp identifica pieza, material, precio COP y enlace, sin confirmar un
   assert.match(message, /Oro 18k/);
   assert.match(message, /COP/);
   assert.doesNotMatch(message, /Referencia:/);
-  assert.match(message, /https:\/\/ejemplo.com\/producto\/a/);
+  assert.match(message, /^https:\/\/ejemplo\.com\/producto\/a$/m);
+  assert.equal(addCatalogLink(message, 'https://ejemplo.com'), message);
   assert.match(message, /confirmas disponibilidad/);
+});
+test('WhatsApp incluye el enlace del catálogo en consultas generales', () => {
+  const message = addCatalogLink('Hola, quiero asesoría.', 'https://ejemplo.com/');
+  assert.match(message, /^https:\/\/ejemplo\.com\/catalogo$/m);
+  assert.equal(new URL(buildWhatsAppLink(message, '573155556523')).searchParams.get('text'), message);
 });
 test('el stock antiguo no marca agotados en WhatsApp', () => {
   const message = generateProductMessage(products[1]);

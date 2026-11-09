@@ -8,7 +8,7 @@ import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import Reveal from "../components/Reveal";
 import useDocumentMeta from "../hooks/useDocumentMeta";
 import { categories } from "../data/mockProducts";
-import { buildWhatsAppLink } from "../utils/whatsappGenerator";
+import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
 
 const materials = [
   {
@@ -58,7 +58,7 @@ const CategoryCard = ({ category, products }) => {
 // isLoading: true mientras App.jsx espera la respuesta de la API (opcional).
 const Home = ({ products, isLoading = false, error = '' }) => {
   useDocumentMeta({});
-  const whatsappLink = buildWhatsAppLink("Hola, quiero una asesoría para elegir una joya.");
+  const whatsappMessage = "Hola, quiero una asesoría para elegir una joya.";
 
   // Destacados reales: usa el campo `featured` del backend en vez de "los 3 más recientes".
   // Si todavía no hay ningún producto marcado como destacado, cae de vuelta a los primeros 4
@@ -88,9 +88,9 @@ const Home = ({ products, isLoading = false, error = '' }) => {
               <Link to="/catalogo" className="luxury-btn luxury-btn-primary">
                 Explorar catálogo
               </Link>
-              <a href={whatsappLink} target="_blank" rel="noreferrer" className="shop-text-link">
+              <WhatsAppAdvisorButton message={whatsappMessage} className="shop-text-link">
                 Asesoría personalizada <ArrowRight size={16} />
-              </a>
+              </WhatsAppAdvisorButton>
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ const Home = ({ products, isLoading = false, error = '' }) => {
         ) : (
           <div className="home-empty">
             <p>Estamos preparando la colección. Escríbenos y te ayudamos a elegir tu próxima joya.</p>
-            <a href={whatsappLink} target="_blank" rel="noreferrer" className="shop-text-link">Pedir asesoría <ArrowRight size={16} aria-hidden="true" /></a>
+            <WhatsAppAdvisorButton message={whatsappMessage} className="shop-text-link">Pedir asesoría <ArrowRight size={16} aria-hidden="true" /></WhatsAppAdvisorButton>
           </div>
         )}
       </Reveal>}
@@ -165,9 +165,9 @@ const Home = ({ products, isLoading = false, error = '' }) => {
       <Reveal as="section" className="home-service-section mx-auto max-w-7xl px-6 py-20">
         <div className="home-material-heading"><h2>Elige con confianza</h2></div>
         <div className="home-services">
-          <article><h3>Atención personal</h3><p>Te ayudamos a elegir y confirmamos disponibilidad por WhatsApp.</p><a href={whatsappLink} target="_blank" rel="noreferrer">Hablar con Alpez <ArrowRight size={16} aria-hidden="true" /></a></article>
+          <article><h3>Atención personal</h3><p>Te ayudamos a elegir y confirmamos disponibilidad por WhatsApp.</p><WhatsAppAdvisorButton message={whatsappMessage}>Hablar con Alpez <ArrowRight size={16} aria-hidden="true" /></WhatsAppAdvisorButton></article>
           <article><h3>Garantía de tu pieza</h3><p>Consulta la cobertura y los cuidados según el material de tu joya.</p><Link to="/garantias-y-cambios">Conocer la garantía <ArrowRight size={16} aria-hidden="true" /></Link></article>
-          <article><h3>Entrega coordinada</h3><p>Acordamos contigo las opciones de entrega y el total antes de confirmar.</p><a href={buildWhatsAppLink('Hola, Alpez. Quisiera conocer las opciones de entrega para mi pedido.')} target="_blank" rel="noreferrer">Consultar entrega <ArrowRight size={16} aria-hidden="true" /></a></article>
+          <article><h3>Entrega coordinada</h3><p>Acordamos contigo las opciones de entrega y el total antes de confirmar.</p><WhatsAppAdvisorButton message={'Hola, Alpez. Quisiera conocer las opciones de entrega para mi pedido.'}>Consultar entrega <ArrowRight size={16} aria-hidden="true" /></WhatsAppAdvisorButton></article>
         </div>
       </Reveal>
 

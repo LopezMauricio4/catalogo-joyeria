@@ -9,7 +9,7 @@ import useDocumentMeta from '../hooks/useDocumentMeta';
 import usePressFeedback from '../hooks/usePressFeedback';
 import { categories } from '../data/mockProducts';
 import { filterProducts, materialNames, readCollectionFilters, resetCollectionFilters, validatePriceRange, formatPrice, orderCategoriesByProductCount } from '../utils/catalog';
-import { buildWhatsAppLink } from '../utils/whatsappGenerator';
+import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
 
 export default function Catalog({ products, isLoading = false, error = '', isSearching = false }) {
   const pressFeedback = usePressFeedback();
@@ -69,9 +69,9 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
         {rangeError && <p role="alert" className="shop-form-error">{rangeError} Abre Filtros para corregirlo.</p>}
       </section>
 
-      {isLoading ? <section aria-label="Cargando catálogo" aria-busy="true" className="shop-product-grid">{Array.from({ length: 8 }, (_, index) => <ProductCardSkeleton key={index} />)}</section> : error ? null : filtered.length ? <section className="shop-product-grid" aria-label="Piezas del catálogo">{filtered.map((product, index) => <JewelryCard key={product.id} product={product} eager={index < 2} />)}</section> : <section className="catalog-empty"><Search size={30} strokeWidth={1} /><h2>{products.length ? 'Tu joya aún te espera' : 'Estamos preparando la colección'}</h2><p>{products.length ? 'Prueba otra palabra o ajusta los filtros para descubrir más piezas.' : 'Escríbenos y te ayudamos a encontrar una pieza para ti.'}</p>{hasFilters && <button className="shop-button" onClick={reset}>Ver todas las piezas</button>}<a className="shop-text-link" target="_blank" rel="noopener noreferrer" href={buildWhatsAppLink('Hola, quiero ayuda para encontrar una joya.')}><WhatsAppIcon size={17} />Pedir asesoría</a></section>}
+      {isLoading ? <section aria-label="Cargando catálogo" aria-busy="true" className="shop-product-grid">{Array.from({ length: 8 }, (_, index) => <ProductCardSkeleton key={index} />)}</section> : error ? null : filtered.length ? <section className="shop-product-grid" aria-label="Piezas del catálogo">{filtered.map((product, index) => <JewelryCard key={product.id} product={product} eager={index < 2} />)}</section> : <section className="catalog-empty"><Search size={30} strokeWidth={1} /><h2>{products.length ? 'Tu joya aún te espera' : 'Estamos preparando la colección'}</h2><p>{products.length ? 'Prueba otra palabra o ajusta los filtros para descubrir más piezas.' : 'Escríbenos y te ayudamos a encontrar una pieza para ti.'}</p>{hasFilters && <button className="shop-button" onClick={reset}>Ver todas las piezas</button>}<WhatsAppAdvisorButton message={'Hola, quiero ayuda para encontrar una joya.'} className="shop-text-link"><WhatsAppIcon size={17} />Pedir asesoría</WhatsAppAdvisorButton></section>}
 
-      <aside className="catalog-concierge"><div className="concierge-icon"><WhatsAppIcon size={24} strokeWidth={1.3} /></div><div><h2>¿Te ayudamos a elegir?</h2><p>Cuéntanos qué buscas. Te acompañamos a encontrar la pieza y coordinamos tu compra por WhatsApp.</p></div><a className="shop-button shop-button-light" href={buildWhatsAppLink('Hola, Alpez. Quiero ayuda para elegir una joya.')} target="_blank" rel="noopener noreferrer">Conversemos <ArrowRight size={17} /></a></aside>
+      <aside className="catalog-concierge"><div className="concierge-icon"><WhatsAppIcon size={24} strokeWidth={1.3} /></div><div><h2>¿Te ayudamos a elegir?</h2><p>Cuéntanos qué buscas. Te acompañamos a encontrar la pieza y coordinamos tu compra por WhatsApp.</p></div><WhatsAppAdvisorButton message={'Hola, Alpez. Quiero ayuda para elegir una joya.'} className="shop-button shop-button-light">Conversemos <ArrowRight size={17} /></WhatsAppAdvisorButton></aside>
 
     </div>
   );
