@@ -33,7 +33,13 @@ export function createProductPreview(dependencies: {
   readTemplate: () => Promise<string>;
 }) {
   return async (req: Request, res: Response) => {
-    const product = await dependencies.findProduct(String(req.params.id));
+    const code = req.params.code;
+    let id = String(req.params.id ?? '');
+    if (typeof code === 'string' && /^[A-Za-z0-9_-]{21}[AQgw]$/.test(code)) {
+      const hex = Buffer.from(code, 'base64url').toString('hex');
+      id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    }
+    const product = id ? await dependencies.findProduct(id) : null;
     const template = await dependencies.readTemplate();
     res.set('Cache-Control', 'no-store');
     if (!product?.visible) { res.status(404).type('html').send(template); return; }

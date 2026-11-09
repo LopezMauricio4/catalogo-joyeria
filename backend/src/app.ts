@@ -23,7 +23,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serve product-specific metadata in the initial HTML, before React runs.
-app.get('/producto/:id', createProductPreview({
+app.get(['/producto/:id', '/p/:code'], createProductPreview({
   findProduct: id => prisma.product.findUnique({ where: { id }, select: { id: true, name: true, description: true, material: true, price: true, image: true, images: true, visible: true } }),
   readTemplate: () => readFile(resolve(__dirname, '../../dist/index.html'), 'utf8'),
 }));

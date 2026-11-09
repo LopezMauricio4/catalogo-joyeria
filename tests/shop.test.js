@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { filterProducts, readCatalogFilters, validatePriceRange, formatPrice } from '../src/utils/catalog.js';
-import { addCatalogLink, generateProductMessage, buildWhatsAppLink } from '../src/utils/whatsappGenerator.js';
+import { addCatalogLink, decodeProductCode, generateProductMessage, buildWhatsAppLink } from '../src/utils/whatsappGenerator.js';
 
 const products = [
   { id: 'a', name: 'Anillo Órbita', category: 'anillos', material: 'oro-18k', price: 120000, stock: 3, createdAt: '2026-09-01', featured: false },
@@ -50,6 +50,14 @@ test('WhatsApp incluye el enlace del catálogo en consultas generales', () => {
   const message = addCatalogLink('Hola, quiero asesoría.', 'https://ejemplo.com/');
   assert.match(message, /^https:\/\/ejemplo\.com\/catalogo$/m);
   assert.equal(new URL(buildWhatsAppLink(message, '573155556523')).searchParams.get('text'), message);
+});
+test('el enlace corto de WhatsApp recupera el UUID exacto de la pieza', () => {
+  const id = '1928b6bd-838d-4867-abdd-a8fa924364bc';
+  const message = generateProductMessage({ ...products[0], id }, 'https://ejemplo.com');
+  const code = message.match(/^https:\/\/ejemplo\.com\/p\/([\w-]{22})$/m)?.[1];
+  assert.ok(code);
+  assert.equal(decodeProductCode(code), id);
+  assert.equal(decodeProductCode(`${code.slice(0, -1)}B`), null);
 });
 test('el stock antiguo no marca agotados en WhatsApp', () => {
   const message = generateProductMessage(products[1]);

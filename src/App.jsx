@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { decodeProductCode } from './utils/whatsappGenerator';
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
@@ -19,6 +20,12 @@ import InventoryPage from "./pages/InventoryPage";
 import SalesPage from "./pages/SalesPage";
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+
+function ShortProductRoute() {
+  const { code } = useParams();
+  const id = decodeProductCode(code);
+  return <Navigate to={id ? `/producto/${id}` : '/catalogo'} replace />;
+}
 
 function RouteScroll() {
   const location = useLocation();
@@ -140,6 +147,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home products={products} isLoading={isLoadingProducts} error={productsError} />} />
             <Route path="/catalogo" element={<Catalog products={products} isLoading={isLoadingProducts} error={productsError} isSearching={searchOpen} />} />
+            <Route path="/p/:code" element={<ShortProductRoute />} />
             <Route path="/producto/:id" element={isLoadingProducts ? <p className="p-8" role="status">Cargando producto…</p> : <ProductDetail products={products} error={productsError} cart={cart} />} />
             <Route path="/carrito" element={<Cart cart={cart} products={products} isLoading={isLoadingProducts} error={productsError} refreshProducts={refreshProducts} />} />
             <Route path="/garantias-y-cambios" element={<GuaranteesPage />} />

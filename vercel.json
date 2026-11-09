@@ -11,6 +11,10 @@
   },
   "rewrites": [
     {
+      "source": "/p/:code",
+      "destination": "/api"
+    },
+    {
       "source": "/producto/:id",
       "destination": "/api"
     },
