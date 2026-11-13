@@ -22,6 +22,20 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/sitemap.xml', async (_req, res) => {
+  const products = await prisma.product.findMany({
+    where: { visible: true },
+    select: { id: true },
+    orderBy: { id: 'asc' },
+  });
+  const origin = 'https://www.alpezjoyeria.com';
+  const paths = ['/', '/catalogo', ...products.map(({ id }) => `/producto/${encodeURIComponent(id)}`)];
+  const entries = paths.map(path => `  <url><loc>${origin}${path}</loc></url>`).join('\n');
+  res.type('application/xml').send(
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`,
+  );
+});
+
 // Serve product-specific metadata in the initial HTML, before React runs.
 app.get(['/producto/:id', '/p/:code'], createProductPreview({
   findProduct: id => prisma.product.findUnique({ where: { id }, select: { id: true, name: true, description: true, material: true, price: true, image: true, images: true, visible: true } }),
