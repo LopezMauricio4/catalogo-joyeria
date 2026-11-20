@@ -35,7 +35,7 @@ export default function Cart({ cart, products, isLoading, error, refreshProducts
   };
   return <div className="cart-page shop-shell">
     <Link to="/catalogo" className="product-back"><ArrowLeft size={17} />Seguir descubriendo</Link>
-    <header className="cart-heading"><p className="shop-eyebrow">TU SELECCIÓN PERSONAL</p><h1>Tu carrito</h1><p>Las joyas que te gustan, juntas en un solo pedido.</p></header>
+    <header className="cart-heading"><h1>Tu carrito</h1><p>Las joyas que te gustan, juntas en un solo pedido.</p></header>
     {!cart.items.length ? <section className="catalog-empty"><ShoppingCart size={34} strokeWidth={1} /><h2>Tu próxima joya te espera</h2><p>Agrega tus piezas favoritas y coordina la compra por WhatsApp, sin crear una cuenta.</p><Link to="/catalogo" className="shop-button">Explorar las piezas</Link></section>
       : isLoading ? <p role="status">Cargando tus piezas…</p>
         : error ? <p role="alert">No podemos mostrar las piezas en este momento. Usa «Reintentar» arriba. Tu selección está guardada.</p>

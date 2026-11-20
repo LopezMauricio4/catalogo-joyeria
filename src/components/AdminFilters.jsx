@@ -15,7 +15,7 @@ export default function AdminFilters({ children, className = '' }) {
   }, []);
   if (!mobile) return <div className={`admin-filters ${className}`}>{children}</div>;
   return <div className="admin-mobile-filters">
-    <button type="button" className="shop-button" aria-haspopup="dialog" aria-controls={id} aria-expanded={open} onClick={() => setOpen(true)}><SlidersHorizontal size={18} aria-hidden="true" />Buscar y filtrar</button>
+    <button type="button" className="shop-button shop-button-secondary" aria-haspopup="dialog" aria-controls={id} aria-expanded={open} onClick={() => setOpen(true)}><SlidersHorizontal size={18} aria-hidden="true" />Buscar y filtrar</button>
     <BottomSheet id={id} open={open} onClose={close} title="Filtros de administración" closeLabel="Cerrar filtros" className="admin-bottom-sheet">
       <div className={`admin-filters admin-filter-sheet-body ${className}`}>{children}</div>
       <div className="admin-sheet-footer"><button type="button" className="shop-button" onClick={close}>Ver resultados</button></div>

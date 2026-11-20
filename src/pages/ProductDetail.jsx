@@ -6,7 +6,7 @@ import JewelryCard from '../components/JewelryCard';
 import ProductImage from '../components/ProductImage';
 import Modal from '../components/Modal';
 import useDocumentMeta from '../hooks/useDocumentMeta';
-import { formatPrice, materialNames } from '../utils/catalog';
+import { formatPrice, materialNames, productReference, relatedPieces } from '../utils/catalog';
 import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
 import { generateProductMessage, getCatalogOrigin } from '../utils/whatsappGenerator';
 import { stockLimit } from '../utils/cart';
@@ -44,8 +44,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
   const atLimit = quantityInCart >= stockLimit(product);
   const purchaseActions = <div className="product-purchase-actions"><WhatsAppAdvisorButton message={whatsappMessage} className="shop-button"><WhatsAppIcon size={19} />{label}</WhatsAppAdvisorButton>{<button type="button" className="shop-button shop-button-secondary" disabled={atLimit} onClick={() => cart.add(product)}><ShoppingCart size={19} />{atLimit ? 'Ya en tu carrito' : 'Agregar al carrito'}</button>}</div>;
   return <div className="product-page shop-shell">
-    <Link className="product-back" to={catalogReturn}><ArrowLeft size={17} />Volver a las piezas</Link>
-    <nav className="product-breadcrumb" aria-label="Ruta de navegación"><Link to="/catalogo">Catálogo</Link><span aria-hidden="true">/</span><Link to={categoryUrl}>{category?.label || 'Piezas'}</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span></nav>
+    <nav className="product-breadcrumb" aria-label="Ruta de navegación"><Link to={catalogReturn}>Catálogo</Link><span aria-hidden="true">/</span><Link to={categoryUrl}>{category?.label || 'Piezas'}</Link><span aria-hidden="true">/</span><span aria-current="page">{product.name}</span></nav>
     <section className="product-layout" aria-label={product.name}>
       <div className={`product-gallery${images.length > 1 ? ' has-thumbnails' : ''}`}>
         <div className="product-main-photo" onTouchStart={event => { touch.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }} onTouchEnd={event => {
@@ -79,7 +78,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
         <div id={extraDetailsId} className="product-extra-details">
         <details className="product-details" open><summary>Detalles que la hacen especial</summary><ul>{(features.length ? features : [materialNames[product.material] || product.material]).map((feature, position) => <li key={`${feature}-${position}`}><Check size={16} /><span>{feature}</span></li>)}</ul></details>
         <details className="product-details"><summary>¿Cómo comprar tu joya?</summary><ol><li>Elige «Consultar por WhatsApp» para consultar esta pieza o agrega varias al carrito.</li><li>Confirmamos contigo disponibilidad, medidas y opciones de entrega.</li><li>Acordamos los detalles de pago y envío directamente contigo.</li></ol></details>
-        <p className="product-reference">Referencia: {product.id}</p>
+        <p className="product-reference">Referencia: {productReference(product.id)}</p>
         </div>
       </div>
     </section>
@@ -87,10 +86,7 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
     {relatedProducts.length > 0 && (
       <section className="product-related" aria-label="También te puede interesar">
         <div className="product-related-heading">
-          <div>
-            <p className="shop-eyebrow">PARA TI</p>
-            <h2>También te puede interesar</h2>
-          </div>
+          <h2>También te puede interesar</h2>
           <Link to="/catalogo" className="shop-text-link">Ver todo</Link>
         </div>
         <div className="shop-product-grid">
@@ -110,11 +106,9 @@ export default function ProductDetail({ products, error = '', cart }) {
   const catalogReturn = typeof candidate === 'string' && (candidate === '/catalogo' || candidate.startsWith('/catalogo?')) ? candidate : '/catalogo';
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return products
-      .filter(item => item.id !== product.id && (item.category === product.category || item.material === product.material))
-      .slice(0, 4);
+    return relatedPieces(product, products);
   }, [product, products]);
   useDocumentMeta({ title: product?.name, description: product?.description, image: product?.image });
-  if (!product) return <div className="shop-shell catalog-empty"><p className="shop-eyebrow">{error ? 'INTENTA DE NUEVO' : 'SIGUE EXPLORANDO'}</p><h1>{error ? 'No pudimos cargar esta pieza' : 'Esta pieza ya no está en el catálogo'}</h1><p>{error ? 'Usa el botón de reintentar para volver a cargar el catálogo.' : 'Descubre otras joyas o escríbenos para encontrar una alternativa.'}</p><Link to={catalogReturn} className="shop-button"><ArrowLeft size={17} />Volver al catálogo</Link></div>;
+  if (!product) return <div className="shop-shell catalog-empty"><h1>{error ? 'No pudimos cargar esta pieza' : 'Esta pieza ya no está en el catálogo'}</h1><p>{error ? 'Usa el botón de reintentar para volver a cargar el catálogo.' : 'Descubre otras joyas o escríbenos para encontrar una alternativa.'}</p><Link to={catalogReturn} className="shop-button"><ArrowLeft size={17} />Volver al catálogo</Link></div>;
   return <ProductView key={product.id} product={product} catalogReturn={catalogReturn} cart={cart} relatedProducts={relatedProducts} />;
 }

@@ -6,7 +6,10 @@ export function inventoryName(item) {
   const sizeLabel = size && /^#?\s*\d+(?:[.,]\d+)?$/.test(size)
     ? `${size.replace(/^#\s*/, '')} ${item.category === 'balines' ? 'mm' : sizeUnits[item.unit] || ''}`.trim()
     : size;
-  const measurements = [sizeLabel,
+  // Skip a size the name already states ("Topo pequeño" + "pequeño" stays "Topo pequeño").
+  const fold = value => String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim().split(/\s+/).join(' ');
+  const sizeInName = sizeLabel && ` ${fold(item.name)} `.includes(` ${fold(sizeLabel)} `);
+  const measurements = [!sizeInName && sizeLabel,
     Number(item.lengthCm) > 0 && `${quantity.format(Number(item.lengthCm))} cm de longitud`,
     Number(item.thicknessMm) > 0 && `${quantity.format(Number(item.thicknessMm))} mm de grosor`,
   ].filter(Boolean).join(' y ');

@@ -97,8 +97,9 @@ const AuthPage = ({ onLogin, user }) => {
         <div className="mb-8 flex justify-center gap-3">
           <button
             type="button"
+            aria-pressed={mode === "login"}
             onClick={() => setMode("login")}
-            className={`rounded-pill px-5 py-2.5 text-xs font-medium uppercase tracking-[0.2em] transition ${
+            className={`inline-flex min-h-12 items-center rounded-pill px-5 text-sm font-medium transition ${
               mode === "login" ? "bg-forest-900 text-white" : "border border-line bg-ivory-soft text-ink-muted"
             }`}
           >
@@ -106,8 +107,9 @@ const AuthPage = ({ onLogin, user }) => {
           </button>
           <button
             type="button"
+            aria-pressed={mode === "register"}
             onClick={() => setMode("register")}
-            className={`rounded-pill px-5 py-2.5 text-xs font-medium uppercase tracking-[0.2em] transition ${
+            className={`inline-flex min-h-12 items-center rounded-pill px-5 text-sm font-medium transition ${
               mode === "register" ? "bg-forest-900 text-white" : "border border-line bg-ivory-soft text-ink-muted"
             }`}
           >
@@ -117,9 +119,8 @@ const AuthPage = ({ onLogin, user }) => {
 
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="rounded-3xl bg-ivory p-6">
-            <p className="luxury-eyebrow">Acceso</p>
-            <h1 className="mt-4 text-4xl font-light text-ink-soft">
-              {mode === "login" ? "Bienvenido" : "Crea tu cuenta"}
+            <h1 className="text-4xl font-light text-ink-soft">
+              {mode === "login" ? "Inicia sesión" : "Crea tu cuenta"}
             </h1>
             <p className="mt-4 text-base leading-7 text-ink-muted">
               {mode === "login"

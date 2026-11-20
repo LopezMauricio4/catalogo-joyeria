@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Package, Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { addInventoryMovement, createInventoryItem, fetchInventory, updateInventoryItem } from '../services/inventoryApi';
 import ProductImage from '../components/ProductImage';
@@ -11,6 +10,9 @@ import AdminFilters from '../components/AdminFilters';
 import AdminNavigation from '../components/AdminNavigation';
 import { inventoryName } from '../utils/inventoryName';
 import { normalizeText } from '../utils/catalog';
+import { plural } from '../utils/adminFormat';
+
+const needsReview = item => item.active !== false && Number(item.stock) <= Number(item.minStock);
 
 const categories = ['balines', 'herrajes', 'pasantes', 'cadenas', 'pulseras', 'dijes', 'candongas', 'topos', 'otros'];
 const materials = ['oro', 'oro laminado'];
@@ -78,22 +80,31 @@ export default function InventoryPage() {
   const [category, setCategory] = useState('');
   const [material, setMaterial] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reviewOnly, setReviewOnly] = useState(false);
   const [revision, setRevision] = useState(0);
   const [movement, setMovement] = useState({ item: null, type: 'PURCHASE', quantity: '', note: '' });
   const controllerRef = useRef(null);
-  useEffect(() => { controllerRef.current?.abort(); const controller = new AbortController(); controllerRef.current = controller; fetchInventory(controller.signal).then(data => { if (!controller.signal.aborted) setItems(data); }).catch(error => { if (error.name !== 'AbortError') showToast(error.message, 'error'); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [revision, showToast]);
-  const filtered = useMemo(() => items.filter(item => (!category || item.category === category) && (!material || item.material === material) && normalizeText(inventoryName(item)).includes(normalizeText(search))), [items, search, category, material]);
+  useEffect(() => { controllerRef.current?.abort(); const controller = new AbortController(); controllerRef.current = controller; fetchInventory(controller.signal).then(data => { if (!controller.signal.aborted) { setItems(data); setLoadError(''); } }).catch(error => { if (error.name !== 'AbortError' && !controller.signal.aborted) setLoadError(error.message); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [revision]);
+  const filtered = useMemo(() => items.filter(item => (!reviewOnly || needsReview(item)) && (!category || item.category === category) && (!material || item.material === material) && normalizeText(inventoryName(item)).includes(normalizeText(search))), [items, search, category, material, reviewOnly]);
+  const reviewCount = items.filter(needsReview).length;
   const saved = item => { setItems(current => current.some(value => value.id === item.id) ? current.map(value => value.id === item.id ? item : value) : [item, ...current]); setEditing(undefined); };
   const openMovement = (item, type) => setMovement({ item, type, quantity: '', note: '' });
   const submitMovement = async data => { const item = await addInventoryMovement(movement.item.id, data); setItems(current => current.map(value => value.id === item.id ? item : value)); setEditing(current => current?.id === item.id ? item : current); setMovement({ item: null }); showToast('Existencias actualizadas', 'success'); };
   return <section className="admin-page mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
     <AdminNavigation />
-    <div className="admin-toolbar mb-8"><div><h1 className="mt-3 text-5xl">Inventario</h1><p className="mt-3 max-w-2xl text-ink-muted">Controla insumos, variantes, costos y movimientos de stock.</p></div><Link to="/admin/productos">Volver al catálogo admin →</Link></div>
+    <div className="admin-toolbar admin-page-heading"><div><h1>Inventario</h1><p>Insumos, variantes, costos y movimientos de stock.</p></div>{editing === undefined && <div className="admin-heading-actions"><button type="button" className="luxury-btn luxury-btn-primary" onClick={() => setEditing(null)}><Plus size={18} aria-hidden="true" />Agregar artículo</button></div>}</div>
     {editing !== undefined ? <ItemForm item={editing} onMovement={openMovement} onSaved={saved} onCancel={() => setEditing(undefined)} /> : <>
-      <div className="admin-options"><button onClick={() => setEditing(null)}><Plus /><strong>Agregar artículo</strong><span>Registra un insumo o variante</span></button><div className="admin-options-summary"><Package /><strong>{items.length} artículos</strong><span>{items.filter(item => item.stock <= item.minStock).length} requieren revisión de stock</span></div></div>
-      <AdminFilters className="inventory-filters"><label>Buscar<input className="admin-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre…" /></label><label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(value => <option key={value}>{value}</option>)}</select></label><label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{materials.map(value => <option key={value} value={value}>{materialLabels[value]}</option>)}</select></label><button type="button" className="shop-button inventory-refresh" aria-label="Actualizar inventario" title="Actualizar inventario" disabled={loading} onClick={() => { setLoading(true); setRevision(value => value + 1); }}><RefreshCw size={16} /></button></AdminFilters>
-      {loading ? <p role="status" className="my-8">Cargando inventario…</p> : <div className="inventory-stock-grid">{filtered.map(item => <InventoryCard key={item.id} item={item} onEdit={setEditing} />)}</div>}
-      {!loading && !filtered.length && <p className="py-10 text-center">No hay artículos con esos filtros.</p>}
+      <AdminFilters className="inventory-filters"><label>Buscar<input type="search" className="admin-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Nombre…" /></label><label>Categoría<select value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas</option>{categories.map(value => <option key={value}>{value}</option>)}</select></label><label>Material<select value={material} onChange={event => setMaterial(event.target.value)}><option value="">Todos</option>{materials.map(value => <option key={value} value={value}>{materialLabels[value]}</option>)}</select></label></AdminFilters>
+      <div className="admin-list-status">
+        <p role="status">{loading ? 'Cargando inventario…' : loadError ? 'Inventario no disponible' : `${plural(filtered.length, 'artículo', 'artículos')}${filtered.length !== items.length ? ` de ${items.length}` : ''}`}</p>
+        {!loading && !loadError && (reviewCount > 0 || reviewOnly) && <button type="button" className={`admin-review-toggle${reviewOnly ? ' is-active' : ''}`} aria-pressed={reviewOnly} onClick={() => setReviewOnly(value => !value)}>{reviewOnly ? 'Ver todos' : `${plural(reviewCount, 'con stock bajo o agotado', 'con stock bajo o agotados')}`}</button>}
+        <button type="button" className="admin-icon-button" aria-label="Actualizar inventario" title="Actualizar inventario" disabled={loading} onClick={() => { setLoading(true); setRevision(value => value + 1); }}><RefreshCw size={18} aria-hidden="true" /></button>
+      </div>
+      {loadError ? <div role="alert" className="admin-block-error"><p>No se pudo cargar el inventario. {loadError}</p><button type="button" className="shop-button shop-button-secondary" onClick={() => { setLoading(true); setRevision(value => value + 1); }}>Reintentar</button></div>
+        : loading ? <div className="admin-product-list" aria-hidden="true">{Array.from({ length: 4 }, (_, index) => <div key={index} className="admin-product-row is-placeholder" />)}</div>
+        : filtered.length ? <div className="inventory-stock-grid">{filtered.map(item => <InventoryCard key={item.id} item={item} onEdit={setEditing} />)}</div>
+        : <div className="admin-block-empty"><p>{items.length ? 'Ningún artículo coincide con estos filtros.' : 'Todavía no hay artículos en el inventario.'}</p>{items.length ? <button type="button" className="admin-text-link" onClick={() => { setSearch(''); setCategory(''); setMaterial(''); setReviewOnly(false); }}>Quitar filtros</button> : <button type="button" className="admin-text-link" onClick={() => setEditing(null)}>Agregar el primero</button>}</div>}
     </>}
     {movement.item && <InventoryMovementForm key={movement.item.id} item={movement.item} initialType={movement.type} onSave={submitMovement} onClose={() => setMovement({ item: null })} />}
   </section>;

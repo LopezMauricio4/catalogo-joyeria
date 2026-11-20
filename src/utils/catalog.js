@@ -25,6 +25,12 @@ export const orderCategoriesByProductCount = (categories, products, material = '
   // A copy keeps the shared category list intact; ties retain its original order.
   return [...categories].sort((a, b) => (counts.get(b.key) || 0) - (counts.get(a.key) || 0));
 };
+// Categories shown as filters: only those with pieces in the current material, keeping the
+// selected one visible so an old link never hides the active filter.
+export const categoriesWithProducts = (categories, products, material = '', selected = '') => {
+  const present = new Set(products.filter(product => !material || product.material === material).map(product => product.category));
+  return orderCategoriesByProductCount(categories, products, material).filter(category => present.has(category.key) || category.key === selected);
+};
 export const validatePriceRange = (min, max) => {
   if ([min, max].some(value => value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 0))) return 'Escribe precios válidos, iguales o mayores a cero.';
   if (min !== '' && max !== '' && Number(min) > Number(max)) return 'El precio máximo debe ser mayor o igual al mínimo.';
@@ -47,4 +53,17 @@ export const filterProducts = (products, filters) => {
     if (filters.sort === 'newest') return (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0);
     return Number(Boolean(b.featured)) - Number(Boolean(a.featured));
   });
+};
+
+// A short, readable reference for customers and support ("A1B2C3D4"); the full id stays internal.
+export const productReference = id => String(id ?? '').replaceAll('-', '').slice(0, 8).toUpperCase();
+// Related pieces: same kind of jewel first, then same material; never the piece itself.
+export const relatedPieces = (product, products, limit = 4) => {
+  const score = item => (item.category === product.category ? 2 : 0) + (item.material === product.material ? 1 : 0);
+  return products
+    .filter(item => item.id !== product.id && score(item) > 0)
+    .map((item, position) => ({ item, position, score: score(item) }))
+    .sort((a, b) => b.score - a.score || a.position - b.position)
+    .slice(0, limit)
+    .map(entry => entry.item);
 };

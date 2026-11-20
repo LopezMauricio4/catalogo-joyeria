@@ -2,7 +2,7 @@ import { useCallback, useId, useRef, useState } from 'react';
 import { ArrowRight, Funnel } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import { categories } from '../data/mockProducts';
-import { filterProducts, materialNames, validatePriceRange, orderCategoriesByProductCount } from '../utils/catalog';
+import { filterProducts, materialNames, validatePriceRange, categoriesWithProducts } from '../utils/catalog';
 
 const emptyDraft = { material: '', category: '', min: '', max: '', sort: 'featured' };
 
@@ -16,7 +16,7 @@ export default function CatalogFilters({ filters, products, onApply, isLoading, 
   const dialogId = useId();
   const close = useCallback(() => setOpen(false), []);
   const rangeError = validatePriceRange(draft.min, draft.max);
-  const orderedCategories = orderCategoriesByProductCount(categories, products, draft.material);
+  const orderedCategories = categoriesWithProducts(categories, products, draft.material, draft.category);
   const count = filterProducts(products, { ...draft, search: filters.search }).length;
   const active = Number(Boolean(filters.material)) + Number(Boolean(filters.category)) + Number(Boolean(filters.min || filters.max));
   const begin = () => { setDraft({ ...emptyDraft, ...filters }); setSubmitted(false); setOpen(true); };

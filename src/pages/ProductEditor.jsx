@@ -109,17 +109,17 @@ const ProductEditor = ({ onSaveProduct, onCancel, product }) => {
       <AdminNavigation />
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="mt-3 text-5xl font-medium tracking-[-0.04em] text-ink md:text-6xl">
+          <h1>
             {editingId ? 'Editar producto' : 'Agregar producto'}
           </h1>
         </div>
-        <button type="button" disabled={isSaving} onClick={onCancel} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-soft">
+        <button type="button" disabled={isSaving} onClick={onCancel} className="admin-text-link">
           <ArrowLeft className="h-4 w-4" />
           Volver a administración
         </button>
       </div>
 
-      <div className="mx-auto max-w-4xl">
+      <div className="max-w-4xl">
         <section className="product-editor-card">
           {editingId && <p className="product-editor-note">{product.visible ? "Visible en el catálogo." : "Oculto: guardar cambios no lo publicará."}</p>}
           <form onSubmit={handleSubmit}><fieldset disabled={isSaving} className="product-editor-fields">

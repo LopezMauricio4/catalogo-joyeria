@@ -8,7 +8,7 @@ import CatalogFilters from '../components/CatalogFilters';
 import useDocumentMeta from '../hooks/useDocumentMeta';
 import usePressFeedback from '../hooks/usePressFeedback';
 import { categories } from '../data/mockProducts';
-import { filterProducts, materialNames, readCollectionFilters, resetCollectionFilters, validatePriceRange, formatPrice, orderCategoriesByProductCount } from '../utils/catalog';
+import { filterProducts, materialNames, readCollectionFilters, resetCollectionFilters, validatePriceRange, formatPrice, categoriesWithProducts } from '../utils/catalog';
 import WhatsAppAdvisorButton from "../components/WhatsAppAdvisorButton";
 
 export default function Catalog({ products, isLoading = false, error = '', isSearching = false }) {
@@ -19,7 +19,7 @@ export default function Catalog({ products, isLoading = false, error = '', isSea
   useDocumentMeta({ title: 'Catálogo', description: 'Descubre joyas en oro 18k y oro laminado. Elige tu pieza y recibe asesoría para comprar por WhatsApp.' });
   const [params, setParams] = useSearchParams();
   const filters = readCollectionFilters(params);
-  const orderedCategories = orderCategoriesByProductCount(categories, products, filters.material);
+  const orderedCategories = categoriesWithProducts(categories, products, filters.material, filters.category);
   const categoryScroll = useRef(null);
   const filtered = useMemo(() => filterProducts(products, readCollectionFilters(params)), [products, params]);
   const advancedCount = Number(Boolean(filters.min || filters.max));

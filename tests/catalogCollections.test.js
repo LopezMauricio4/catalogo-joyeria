@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { catalogSearchParams, filterProducts, readCollectionFilters, resetCollectionFilters, orderCategoriesByProductCount } from '../src/utils/catalog.js';
+import { catalogSearchParams, filterProducts, readCollectionFilters, resetCollectionFilters, orderCategoriesByProductCount, categoriesWithProducts, productReference, relatedPieces } from '../src/utils/catalog.js';
 
 const products = [
   { id: 'gold-ring', category: 'anillos', material: 'oro-18k', name: 'Anillo', price: 100 },
@@ -52,4 +52,29 @@ test('todas las piezas y limpiar filtros conservan la colección seleccionada', 
   const reset = resetCollectionFilters(params);
   assert.equal(reset.toString(), 'material=laminado');
   assert.deepEqual(filterProducts(products, readCollectionFilters(reset)).map(product => product.id), ['laminated-ring', 'laminated-chain']);
+});
+
+test('los filtros solo muestran categorías con piezas, salvo la seleccionada', () => {
+  const categories = [{ key:'anillos' }, { key:'cadenas' }, { key:'pulseras' }];
+  const keys = (material, selected) => categoriesWithProducts(categories, products, material, selected).map(category => category.key);
+  assert.deepEqual(keys(''), ['anillos', 'cadenas']);
+  assert.deepEqual(keys('oro-18k'), ['anillos']);
+  assert.deepEqual(keys('oro-18k', 'pulseras'), ['anillos', 'pulseras']);
+  assert.deepEqual(categoriesWithProducts(categories, []), []);
+});
+
+test('la referencia visible es corta y legible', () => {
+  assert.equal(productReference('562856b7-6be8-4ea5-a8be-4bc7d2ab9686'), '562856B7');
+  assert.equal(productReference(undefined), '');
+});
+
+test('las piezas relacionadas priorizan la misma categoría y excluyen la actual', () => {
+  const items = [
+    { id: 'a', category: 'manillas', material: 'laminado' },
+    { id: 'b', category: 'topos', material: 'laminado' },
+    { id: 'c', category: 'manillas', material: 'oro-18k' },
+    { id: 'd', category: 'manillas', material: 'laminado' },
+    { id: 'e', category: 'anillos', material: 'oro-18k' },
+  ];
+  assert.deepEqual(relatedPieces(items[0], items).map(item => item.id), ['d', 'c', 'b']);
 });

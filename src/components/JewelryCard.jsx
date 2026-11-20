@@ -1,4 +1,3 @@
-import { ArrowUpRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import ProductImage from './ProductImage';
 import { formatPrice, materialNames } from '../utils/catalog';
@@ -11,7 +10,7 @@ export default function JewelryCard({ product, eager = false }) {
   return <article className="jewel-card" data-material={product.material}>
     <Link className="jewel-card-link" to={`/producto/${encodeURIComponent(product.id)}`} state={{ catalogReturn }} aria-label={`Ver ${product.name}`}>
       <div className="jewel-card-photo"><ProductImage src={product.image} alt={product.name} eager={eager} /></div>
-      <div className="jewel-card-info"><h3>{product.name}</h3><p className="jewel-card-material">{materialNames[product.material] || product.material}</p><p className="jewel-card-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p><span className="jewel-card-action" aria-hidden="true"><ArrowUpRight size={14} /></span></div>
+      <div className="jewel-card-info"><h3>{product.name}</h3><p className="jewel-card-material">{materialNames[product.material] || product.material}</p><p className="jewel-card-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p></div>
     </Link>
   </article>;
 }
