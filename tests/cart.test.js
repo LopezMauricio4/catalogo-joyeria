@@ -26,6 +26,7 @@ test('calcula subtotal con precios actuales y prepara todas las referencias para
   assert.doesNotMatch(message, /Referencia:/);
   assert.match(message, /precio por confirmar/);
   assert.match(message, /confirmas disponibilidad/);
-  assert.match(message, /^https:\/\/alpez\.example\/producto\/a$/m);
+  assert.match(message, /^https:\/\/alpez\.example\/producto\/a\?vista=2$/m);
+  assert.match(message, /^https:\/\/alpez\.example\/producto\/b\?vista=2$/m);
   assert.equal(new URL(buildWhatsAppLink(message)).searchParams.get('text'), message);
 });

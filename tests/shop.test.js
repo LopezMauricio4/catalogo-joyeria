@@ -42,7 +42,7 @@ test('WhatsApp identifica pieza, material, precio COP y enlace, sin confirmar un
   assert.match(message, /Oro 18k/);
   assert.match(message, /COP/);
   assert.doesNotMatch(message, /Referencia:/);
-  assert.match(message, /^https:\/\/ejemplo\.com\/producto\/a$/m);
+  assert.match(message, /^https:\/\/ejemplo\.com\/producto\/a\?vista=2$/m);
   assert.equal(addCatalogLink(message, 'https://ejemplo.com'), message);
   assert.match(message, /confirmas disponibilidad/);
 });
@@ -51,13 +51,15 @@ test('WhatsApp incluye el enlace del catálogo en consultas generales', () => {
   assert.match(message, /^https:\/\/ejemplo\.com\/catalogo$/m);
   assert.equal(new URL(buildWhatsAppLink(message, '573155556523')).searchParams.get('text'), message);
 });
-test('el enlace corto de WhatsApp recupera el UUID exacto de la pieza', () => {
+test('el enlace corto incluye la versión de la vista previa y conserva la consulta completa de WhatsApp', () => {
   const id = '1928b6bd-838d-4867-abdd-a8fa924364bc';
   const message = generateProductMessage({ ...products[0], id }, 'https://ejemplo.com');
-  const code = message.match(/^https:\/\/ejemplo\.com\/p\/([\w-]{22})$/m)?.[1];
+  const draft = new URL(buildWhatsAppLink(message)).searchParams.get('text');
+  const code = draft.match(/^https:\/\/ejemplo\.com\/p\/([\w-]{22})\?vista=2$/m)?.[1];
   assert.ok(code);
   assert.equal(decodeProductCode(code), id);
   assert.equal(decodeProductCode(`${code.slice(0, -1)}B`), null);
+  assert.ok(draft.endsWith('¿Me confirmas disponibilidad y opciones de entrega para hacer mi compra?'));
 });
 test('el stock antiguo no marca agotados en WhatsApp', () => {
   const message = generateProductMessage(products[1]);

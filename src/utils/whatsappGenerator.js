@@ -6,6 +6,8 @@ export const getCatalogOrigin = (currentOrigin) =>
   (import.meta.env?.VITE_PUBLIC_SITE_URL?.trim() || currentOrigin).replace(/\/$/, '');
 
 const uuidPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
+// Give WhatsApp a fresh URL for the optimized preview while keeping the product's canonical URL.
+const productPreviewQuery = '?vista=2';
 
 export function decodeProductCode(code) {
   if (!/^[A-Za-z0-9_-]{21}[AQgw]$/.test(code)) return null;
@@ -16,10 +18,10 @@ export function decodeProductCode(code) {
 
 function productUrl(origin, id) {
   const base = origin.replace(/\/$/, '');
-  if (!uuidPattern.test(id)) return `${base}/producto/${encodeURIComponent(id)}`;
+  if (!uuidPattern.test(id)) return `${base}/producto/${encodeURIComponent(id)}${productPreviewQuery}`;
   const bytes = id.replaceAll('-', '').match(/../g).map(pair => parseInt(pair, 16));
   const code = btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
-  return `${base}/p/${code}`;
+  return `${base}/p/${code}${productPreviewQuery}`;
 }
 
 export const addCatalogLink = (message, origin) => {
