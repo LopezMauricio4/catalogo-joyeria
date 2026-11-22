@@ -44,7 +44,7 @@ const normalizeProduct = (product) => {
   };
 };
 
-export const fetchProducts = async () => {
+const requestProducts = async () => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
@@ -54,6 +54,13 @@ export const fetchProducts = async () => {
     if (!Array.isArray(data)) throw new Error('La respuesta del catálogo no es válida.');
     return data.map(normalizeProduct);
   } finally { clearTimeout(timeout); }
+};
+
+let productsRequest;
+
+export const fetchProducts = () => {
+  productsRequest ??= requestProducts().finally(() => { productsRequest = undefined; });
+  return productsRequest;
 };
 
 export const fetchAdminProducts = async (signal) => {

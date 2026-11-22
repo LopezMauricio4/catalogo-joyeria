@@ -39,7 +39,7 @@ app.get('/sitemap.xml', async (_req, res) => {
 // Serve product-specific metadata in the initial HTML, before React runs.
 app.get(['/producto/:id', '/p/:code'], createProductPreview({
   findProduct: id => prisma.product.findUnique({ where: { id }, select: { id: true, name: true, description: true, material: true, price: true, image: true, images: true, visible: true } }),
-  readTemplate: () => readFile(resolve(__dirname, '../../dist/index.html'), 'utf8'),
+  readTemplate: () => readFile(resolve(__dirname, '../../dist/app.html'), 'utf8'),
 }));
 
 app.get('/api/health', (_req: Request, res: Response) => {

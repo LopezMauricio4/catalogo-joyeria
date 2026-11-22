@@ -1,0 +1,11 @@
+# Alpez Joyería
+
+> Catálogo colombiano de joyas en oro 18k y oro laminado 18k. Las consultas de disponibilidad, compra y entrega se coordinan por WhatsApp.
+
+## Páginas públicas
+
+- [Inicio](https://www.alpezjoyeria.com/): Presentación de Alpez y colecciones.
+- [Catálogo](https://www.alpezjoyeria.com/catalogo): Piezas publicadas y precios en pesos colombianos.
+- [Garantías y cambios](https://www.alpezjoyeria.com/garantias-y-cambios): Condiciones y canales de atención.
+- [Términos y condiciones](https://www.alpezjoyeria.com/terminos-y-condiciones): Información sobre pedidos y entregas.
+- [Mapa del sitio](https://www.alpezjoyeria.com/sitemap.xml): Enlaces a las fichas públicas de producto.

@@ -3,7 +3,7 @@
 Se publica un único proyecto desde la raíz del repositorio. `vercel.json`
 compila el frontend Vite y el backend Express dentro del mismo despliegue.
 Las peticiones `/api` y `/api/*` llegan al backend conservando el prefijo;
-las demás llegan al frontend, que tiene el fallback a `index.html` para React Router.
+la portada usa `index.html`. Las demás rutas del frontend usan `app.html` como fallback para React Router. Solo la portada precarga su foto principal.
 
 El backend usa `type: commonjs` con TypeScript NodeNext para que la salida
 JavaScript use el mismo formato que el cargador de la función Express. Los

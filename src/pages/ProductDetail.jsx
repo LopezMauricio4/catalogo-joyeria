@@ -54,10 +54,10 @@ function ProductView({ product, catalogReturn, cart, relatedProducts = [] }) {
           if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) move(dx < 0 ? 1 : -1);
           touch.current = null;
         }}>
-          <button type="button" className="product-zoom-trigger" onClick={() => setZoom(true)} aria-label={`Ampliar imagen de ${product.name}`}><ProductImage src={images[index]} alt={product.name} eager /><span className="product-zoom-hint" aria-hidden="true"><ZoomIn size={20} /></span></button>
+          <button type="button" className="product-zoom-trigger" onClick={() => setZoom(true)} aria-label={`Ampliar imagen de ${product.name}`}><ProductImage src={images[index]} alt={product.name} eager sizes="(max-width: 767px) 100vw, (max-width: 1440px) 50vw, 680px" /><span className="product-zoom-hint" aria-hidden="true"><ZoomIn size={20} /></span></button>
 
         </div>
-        {images.length > 1 && <div className="product-gallery-thumbnails" role="group" aria-label="Imágenes de la pieza">{images.map((image, position) => <button key={image} type="button" aria-label={`Ver imagen ${position + 1} de ${images.length}`} aria-pressed={index === position} onClick={() => setSelected(position)}><ProductImage src={image} alt={`${product.name}, vista ${position + 1}`} /></button>)}</div>}
+        {images.length > 1 && <div className="product-gallery-thumbnails" role="group" aria-label="Imágenes de la pieza">{images.map((image, position) => <button key={image} type="button" aria-label={`Ver imagen ${position + 1} de ${images.length}`} aria-pressed={index === position} onClick={() => setSelected(position)}><ProductImage src={image} alt={`${product.name}, vista ${position + 1}`} sizes="80px" /></button>)}</div>}
         <span className="sr-only" aria-live="polite">Imagen {index + 1} de {images.length || 1}</span>
       </div>
       <div className={`product-story${detailsExpanded ? ' is-details-expanded' : ''}`}><h1>{product.name}</h1><div className="product-price-row"><p className="product-price">{formatPrice(product.price)}{product.price > 0 && <span> COP</span>}</p><p className="shop-eyebrow product-material-label" data-material={product.material}>{materialNames[product.material] || product.material}</p></div>

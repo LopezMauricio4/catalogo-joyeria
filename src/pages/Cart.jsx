@@ -41,7 +41,7 @@ export default function Cart({ cart, products, isLoading, error, refreshProducts
         : error ? <p role="alert">No podemos mostrar las piezas en este momento. Usa «Reintentar» arriba. Tu selección está guardada.</p>
           : <div className="cart-layout"><section aria-label="Piezas del carrito" className="cart-items">
             {rows.map(({ id, quantity, product, limit, issue }) => <article key={id} className="cart-item">
-              {product ? <Link to={`/producto/${encodeURIComponent(id)}`} className="cart-photo"><ProductImage src={product.image} alt={product.name} /></Link> : <div className="cart-photo"><ProductImage alt="Pieza no disponible" /></div>}
+              {product ? <Link to={`/producto/${encodeURIComponent(id)}`} className="cart-photo"><ProductImage src={product.image} alt={product.name} sizes="112px" /></Link> : <div className="cart-photo"><ProductImage alt="Pieza no disponible" /></div>}
               <div className="cart-item-info"><p className="shop-eyebrow">{product ? materialNames[product.material] || product.material : 'No disponible'}</p><h2>{product ? <Link to={`/producto/${encodeURIComponent(id)}`}>{product.name}</Link> : 'Pieza retirada del catálogo'}</h2>
                 {product && <p>{formatPrice(product.price)} <small>{product.price > 0 ? 'COP / unidad' : ''}</small></p>}
                 {issue && <p className="shop-form-error" role="alert">{issue}</p>}

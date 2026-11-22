@@ -27,11 +27,17 @@ const materials = [
   },
 ];
 
-const CategoryCard = ({ category, products }) => {
+const CategoryCard = ({ category, products, categoryCount, wideOnMobile }) => {
   const availableProducts = products.filter(
     (product) => product.category === category.key,
   );
   const activeProduct = availableProducts[0];
+  const sizes = [
+    `(max-width: 767px) ${wideOnMobile ? '100vw' : '48vw'}`,
+    `(max-width: 1023px) ${100 / Math.min(categoryCount, 3)}vw`,
+    `(max-width: 1439px) ${100 / categoryCount}vw`,
+    `${Math.ceil(1440 / categoryCount)}px`,
+  ].join(', ');
 
   return (
     <Link to={`/catalogo?categoria=${category.key}`} className="category-card group">
@@ -41,6 +47,7 @@ const CategoryCard = ({ category, products }) => {
           src={activeProduct.image}
           alt={`${category.label}: ${activeProduct.name}`}
           className="category-card-image"
+          sizes={sizes}
         />
       )}
       <span className="category-card-content">
@@ -74,8 +81,13 @@ const Home = ({ products, isLoading = false, error = '' }) => {
         <div className="home-hero-visual">
           <ProductImage
             src="/images/inicio-alpez.webp"
+            srcSet="/images/inicio-alpez-768.webp 768w, /images/inicio-alpez.webp 1440w"
+            sizes="(max-width: 767px) 100vw, 55vw"
             alt="Detalle de una joya Alpez con balines dorados"
+            width={1440}
+            height={1920}
             eager
+            fetchPriority="high"
           />
         </div>
 
@@ -136,7 +148,7 @@ const Home = ({ products, isLoading = false, error = '' }) => {
         ) : showcaseProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
             {showcaseProducts.map((product) => (
-              <JewelryCard key={product.id} product={product} />
+              <JewelryCard key={product.id} product={product} sizes="(max-width: 1023px) 48vw, (max-width: 1439px) 24vw, 340px" />
             ))}
           </div>
         ) : (
@@ -155,8 +167,8 @@ const Home = ({ products, isLoading = false, error = '' }) => {
           </div>
 
           <div className="home-category-grid">
-            {availableCategories.map((category) => (
-              <CategoryCard key={category.key} category={category} products={products} />
+            {availableCategories.map((category, index) => (
+              <CategoryCard key={category.key} category={category} products={products} categoryCount={availableCategories.length} wideOnMobile={index === availableCategories.length - 1 && index % 2 === 0} />
             ))}
           </div>
         </div>

@@ -6,7 +6,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.js": {
-      "includeFiles": "{backend/{dist/**,package.json,node_modules/.prisma/client/**},dist/index.html}"
+      "includeFiles": "{backend/{dist/**,package.json,node_modules/.prisma/client/**},dist/app.html}"
     }
   },
   "rewrites": [
@@ -27,8 +27,12 @@
       "destination": "/api"
     },
     {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!\\.well-known/).*)",
+      "destination": "/app.html"
     }
   ]
 }
