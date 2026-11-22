@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 
 type PreviewProduct = { id: string; name: string; description: string | null; material: string; price: unknown; image: string | null; images: string[]; visible: boolean };
 const escapeHtml = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]!));
+const cloudinaryOriginalPath = /^(\/[^/]+\/image\/upload\/)(?=v\d+\/)/;
 
 export function renderProductPreview(template: string, product: PreviewProduct, url: string) {
   const title = `${product.name} · Alpez Joyería`;
@@ -19,7 +20,13 @@ export function renderProductPreview(template: string, product: PreviewProduct, 
   ];
   if (image) {
     const imageUrl = new URL(image, url);
-    if (['https:', 'http:'].includes(imageUrl.protocol)) tags.push(meta('property', 'og:image', imageUrl.href), meta('property', 'og:image:alt', product.name), meta('name', 'twitter:image', imageUrl.href));
+    if (['https:', 'http:'].includes(imageUrl.protocol)) {
+      if (imageUrl.hostname === 'res.cloudinary.com') {
+        // WhatsApp recommends images under 600 KB. Resize the preview without cropping the product.
+        imageUrl.pathname = imageUrl.pathname.replace(cloudinaryOriginalPath, '$1c_limit,w_800,h_800,f_jpg,q_75/');
+      }
+      tags.push(meta('property', 'og:image', imageUrl.href), meta('property', 'og:image:alt', product.name), meta('name', 'twitter:image', imageUrl.href));
+    }
   }
   return template
     .replace(/<title>.*?<\/title>/is, () => `<title>${escapeHtml(title)}</title>`)

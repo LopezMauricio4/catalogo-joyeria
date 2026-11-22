@@ -30,19 +30,23 @@ test('las prendas ocultas no revelan nombre ni portada en la vista previa', asyn
   assert.doesNotMatch(body, /cover.jpg|Anillo tres carriles/);
 });
 
-test('el enlace corto consulta el UUID exacto y devuelve la vista previa de esa prenda', async () => {
+test('el enlace corto consulta el UUID exacto y devuelve una portada JPEG ligera', async () => {
   const id = '1928b6bd-838d-4867-abdd-a8fa924364bc';
   const code = Buffer.from(id.replaceAll('-', ''), 'hex').toString('base64url');
+  const image = 'https://res.cloudinary.com/alpez/image/upload/v123/catalogo/portada.jpg';
+  const preview = 'https://res.cloudinary.com/alpez/image/upload/c_limit,w_800,h_800,f_jpg,q_75/v123/catalogo/portada.jpg';
   let body = '';
   const handler = createProductPreview({
     findProduct: async requestedId => {
       assert.equal(requestedId, id);
-      return { ...product, id };
+      return { ...product, id, image };
     },
     readTemplate: async () => template,
   });
   const res: any = { set: () => res, type: () => res, send: (value: string) => { body = value; return res; } };
   await handler({ params: { code }, protocol: 'https', get: (header: string) => header === 'host' ? 'alpez.example' : undefined } as any, res);
-  assert.match(body, /property="og:image" content="https:\/\/example.com\/cover.jpg"/);
+  assert.ok(body.includes(`property="og:image" content="${preview}"`));
+  assert.ok(body.includes(`name="twitter:image" content="${preview}"`));
+  assert.ok(!body.includes(image));
   assert.ok(body.includes(`https://alpez.example/producto/${id}`));
 });
