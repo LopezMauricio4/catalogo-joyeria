@@ -420,6 +420,36 @@ p {
 .jewel-card-link:hover { transform: none; }
 .jewel-card-photo { position: relative; aspect-ratio: 4 / 5; background: #ece7df; overflow: hidden; border-radius: 6px; }
 .jewel-card-photo > img, .jewel-card-photo > .product-image-placeholder { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.jewel-card-photo > .product-image-loading-label {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: var(--color-forest-800);
+  font: italic 600 .875rem/1.3 var(--font-display);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .jewel-card-photo > img { transition: transform .5s ease, opacity 180ms var(--ease-luxury); }
+  .jewel-card-photo > img[data-photo-loading] { opacity: .65; }
+
+  .jewel-card-photo:has(> img[data-photo-loading][data-photo-in-view])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 25%, var(--color-gold-50) 47%, var(--color-ivory-soft) 52%, transparent 75%);
+    pointer-events: none;
+    animation: jewel-photo-sheen 1s linear 150ms 2 both;
+  }
+}
+
+@keyframes jewel-photo-sheen {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
 .jewel-card-badge { position: absolute; top: 12px; left: 12px; font-size: 10px; padding: 6px 9px; background: #f9f5eced; color: var(--color-forest-900); border-radius: 3px; }
 .jewel-card-badge.is-sold-out { background: var(--color-forest-800); color: white; }
 
